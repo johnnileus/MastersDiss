@@ -31,6 +31,9 @@ public class RoadGenerator : MonoBehaviour {
 
     private float lastTicked;
     private float tickDelay = 1.0f;
+
+    private float splitAngle = 90f;
+    private float angleRandomness = 15f;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -65,12 +68,13 @@ public class RoadGenerator : MonoBehaviour {
         Node n = new Node(h.pos);
         if (h.prevNode != null) {
             n.connections.Add(h.prevNode);
-
         }
         h.prevNode?.connections.Add(n);
+        
         nodes.Add(n);
         DisplayNode(n);
-        h.pos += h.dir * 10;
+        Vector3 newDir = Quaternion.AngleAxis(Random.Range(-angleRandomness, angleRandomness), Vector3.up) * h.dir;
+        h.pos += newDir * 10;
         h.prevNode = n;
     }
     
@@ -93,7 +97,7 @@ public class RoadGenerator : MonoBehaviour {
 
     
     void SplitHeadNode(HeadNode h) {
-        Vector3 newDir = Quaternion.AngleAxis(45f, Vector3.up) * h.dir;
+        Vector3 newDir = Quaternion.AngleAxis(splitAngle, Vector3.up) * h.dir;
         HeadNode newHead = new HeadNode(h.prevNode.pos + newDir * 10, newDir);
         newHead.prevNode = h.prevNode;
         headNodes.Add(newHead);
