@@ -6,10 +6,12 @@ public class HeadNode {
     public Vector3 pos;
     public Vector3 dir;
     public Node prevNode;
+    public int nodesSinceSplit = 0;
 
     public HeadNode(Vector3 p, Vector3 d) {
         pos = p;
         dir = d;
+
     }
 }
 
@@ -30,10 +32,12 @@ public class RoadGenerator : MonoBehaviour {
     private List<Node> nodes = new List<Node>();
 
     private float lastTicked;
-    private float tickDelay = 1.0f;
+    private float tickDelay = .1f;
 
     private float splitAngle = 90f;
     private float angleRandomness = 15f;
+
+    private float nodeDistance = 10f;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -55,7 +59,7 @@ public class RoadGenerator : MonoBehaviour {
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
             
-            if (Random.Range(0,5) == 1) {
+            if (h.nodesSinceSplit > 7) {
                 SplitHeadNode(h);
             }
             
@@ -74,8 +78,9 @@ public class RoadGenerator : MonoBehaviour {
         nodes.Add(n);
         DisplayNode(n);
         Vector3 newDir = Quaternion.AngleAxis(Random.Range(-angleRandomness, angleRandomness), Vector3.up) * h.dir;
-        h.pos += newDir * 10;
+        h.pos += newDir * nodeDistance;
         h.prevNode = n;
+        h.nodesSinceSplit++;
     }
     
     void DisplayNode(Node n) {
@@ -90,7 +95,7 @@ public class RoadGenerator : MonoBehaviour {
                 Node neighbour = node.connections[j];
                 Vector3 pos1 = node.pos;
                 Vector3 pos2 = neighbour.pos;
-                Debug.DrawLine(pos1, pos2, Color.red, 1.0f);
+                Debug.DrawLine(pos1, pos2, Color.red, tickDelay);
             }
         }
     }
@@ -98,9 +103,10 @@ public class RoadGenerator : MonoBehaviour {
     
     void SplitHeadNode(HeadNode h) {
         Vector3 newDir = Quaternion.AngleAxis(splitAngle, Vector3.up) * h.dir;
-        HeadNode newHead = new HeadNode(h.prevNode.pos + newDir * 10, newDir);
+        HeadNode newHead = new HeadNode(h.prevNode.pos + newDir * nodeDistance, newDir);
         newHead.prevNode = h.prevNode;
         headNodes.Add(newHead);
+        h.nodesSinceSplit = 0;
     }
     
 }
