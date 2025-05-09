@@ -2,15 +2,23 @@ using System.Collections.Generic;
 using UnityEditor.TerrainTools;
 using UnityEngine;
 
+//todo:
+// weighted direction changing
+// boundary
+// quad-tree/other
+
 public class HeadNode {
     public Vector3 pos;
     public Vector3 dir;
     public Node prevNode;
     public int nodesSinceSplit = 0;
+    public bool disabled = false;
+    public int ID = -1;
 
-    public HeadNode(Vector3 p, Vector3 d) {
+    public HeadNode(Vector3 p, Vector3 d, int id) {
         pos = p;
         dir = d;
+        ID = id;
 
     }
 }
@@ -18,6 +26,8 @@ public class HeadNode {
 public class Node {
     public Vector3 pos;
     public List<Node> connections = new List<Node>();
+    public int headID = -1;
+    public int ID;
 
     public Node(Vector3 p) {
         pos = p;
@@ -32,18 +42,22 @@ public class RoadGenerator : MonoBehaviour {
     private List<Node> nodes = new List<Node>();
 
     private float lastTicked;
-    private float tickDelay = .1f;
+    private float tickDelay = 0f;
 
     private float splitAngle = 90f;
     private float angleRandomness = 15f;
 
     private float nodeDistance = 10f;
+
+    private int headCounter = 0;
+    private int nodeCounter = 0;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         lastTicked = Time.time;
-        headNodes.Add(new HeadNode(Vector3.zero, Vector3.forward));
+        headNodes.Add(new HeadNode(Vector3.zero, Vector3.forward, headCounter));
+        headCounter++;
     }
 
     // Update is called once per frame
@@ -59,7 +73,7 @@ public class RoadGenerator : MonoBehaviour {
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
             
-            if (h.nodesSinceSplit > 7) {
+            if (h.nodesSinceSplit > 3) {
                 SplitHeadNode(h);
             }
             
@@ -69,14 +83,32 @@ public class RoadGenerator : MonoBehaviour {
     }
     
     void IterateHead(HeadNode h) {
+        if (h.disabled) return;
+
+        //create new node
         Node n = new Node(h.pos);
+        n.ID = nodeCounter;
+        n.headID = h.ID;
         if (h.prevNode != null) {
             n.connections.Add(h.prevNode);
         }
         h.prevNode?.connections.Add(n);
         
+        
+        
         nodes.Add(n);
         DisplayNode(n);
+        if (!(h.nodesSinceSplit <= 1)) {
+            Node closestNode = FindClosestNode(h);
+            if (closestNode != null && Vector3.Distance(closestNode.pos, h.pos) < nodeDistance * 2f) {
+                h.disabled = true;
+                closestNode.connections.Add(n);
+                n.connections.Add(closestNode);
+            }
+        }
+
+        
+        
         Vector3 newDir = Quaternion.AngleAxis(Random.Range(-angleRandomness, angleRandomness), Vector3.up) * h.dir;
         h.pos += newDir * nodeDistance;
         h.prevNode = n;
@@ -85,6 +117,23 @@ public class RoadGenerator : MonoBehaviour {
     
     void DisplayNode(Node n) {
         Instantiate(testBall, n.pos, Quaternion.identity);
+    }
+    
+    Node FindClosestNode(HeadNode h) {
+        float closest = 10000f;
+        Node closestNode = null;
+        
+        for (int i = 0; i < nodes.Count; i++) {
+            Node node = nodes[i];
+            if (node.headID != h.ID) {
+                float dist = Vector3.Distance(h.pos, node.pos);
+                if (closest > dist) {
+                    closest = dist;
+                    closestNode = nodes[i];
+                }
+            }
+        }   
+        return closestNode;
     }
     
     void DrawConnections() {
@@ -103,10 +152,17 @@ public class RoadGenerator : MonoBehaviour {
     
     void SplitHeadNode(HeadNode h) {
         Vector3 newDir = Quaternion.AngleAxis(splitAngle, Vector3.up) * h.dir;
-        HeadNode newHead = new HeadNode(h.prevNode.pos + newDir * nodeDistance, newDir);
+        HeadNode newHead = new HeadNode(h.prevNode.pos + newDir * nodeDistance, newDir, headCounter);
+
+        if (Vector3.Distance(FindClosestNode(newHead).pos, newHead.pos) < nodeDistance * .9f) {
+            //discard head
+        }
+        headCounter++;
         newHead.prevNode = h.prevNode;
         headNodes.Add(newHead);
         h.nodesSinceSplit = 0;
+        h.ID = headCounter;
+        headCounter++;
     }
     
 }
