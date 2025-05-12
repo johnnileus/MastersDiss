@@ -13,6 +13,9 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/QuadTree.cs" root0="FORCE_HIGHLIGHTING" />
+  </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -91,7 +94,7 @@
       <option name="presentableId" value="Default" />
       <updated>1746556234428</updated>
       <workItem from="1746556238395" duration="547000" />
-      <workItem from="1746693366374" duration="19171000" />
+      <workItem from="1746693366374" duration="29851000" />
     </task>
     <servers />
   </component>

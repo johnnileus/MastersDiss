@@ -42,15 +42,18 @@ public class RoadGenerator : MonoBehaviour {
     private List<Node> nodes = new List<Node>();
 
     private float lastTicked;
-    private float tickDelay = 0f;
+    [SerializeField] private float tickDelay;
 
-    private float splitAngle = 90f;
-    private float angleRandomness = 15f;
+    [SerializeField] private float splitAngle;
+    [SerializeField] private float angleRandomness;
 
-    private float nodeDistance = 10f;
+    [SerializeField] private float nodeDistance;
+
+    private QuadTree nodeTree = new QuadTree(1024);
 
     private int headCounter = 0;
     private int nodeCounter = 0;
+    private int disabledHeads = 0;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -63,22 +66,24 @@ public class RoadGenerator : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        if (lastTicked + tickDelay < Time.time) {
+        if (lastTicked + tickDelay < Time.time && false) {
             IterateGraph();
             lastTicked = Time.time;
         }
+        nodeTree.DrawTree();
     }
     
     void IterateGraph() {
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
             
-            if (h.nodesSinceSplit > 3) {
+            if (h.nodesSinceSplit > 8) {
                 SplitHeadNode(h);
             }
             
             IterateHead(h);
         }
+        PurgeOldHeads();
         DrawConnections();
     }
     
@@ -98,9 +103,9 @@ public class RoadGenerator : MonoBehaviour {
         
         nodes.Add(n);
         DisplayNode(n);
-        if (!(h.nodesSinceSplit <= 1)) {
+        if (!(h.nodesSinceSplit < 1)) {
             Node closestNode = FindClosestNode(h);
-            if (closestNode != null && Vector3.Distance(closestNode.pos, h.pos) < nodeDistance * 2f) {
+            if (closestNode != null && Vector3.Distance(closestNode.pos, h.pos) < nodeDistance * 1.8f) {
                 h.disabled = true;
                 closestNode.connections.Add(n);
                 n.connections.Add(closestNode);
@@ -110,6 +115,7 @@ public class RoadGenerator : MonoBehaviour {
         
         
         Vector3 newDir = Quaternion.AngleAxis(Random.Range(-angleRandomness, angleRandomness), Vector3.up) * h.dir;
+        h.dir = newDir;
         h.pos += newDir * nodeDistance;
         h.prevNode = n;
         h.nodesSinceSplit++;
@@ -149,6 +155,18 @@ public class RoadGenerator : MonoBehaviour {
         }
     }
 
+    void PurgeOldHeads() {
+        if (disabledHeads > 10) { 
+            List<HeadNode> newNodes = new List<HeadNode>();
+            for (int i = 0; i < headNodes.Count; i++) {
+                if (!headNodes[i].disabled) {
+                    newNodes.Add(headNodes[i]);
+                }
+            }
+
+            headNodes = newNodes;}
+
+    }
     
     void SplitHeadNode(HeadNode h) {
         Vector3 newDir = Quaternion.AngleAxis(splitAngle, Vector3.up) * h.dir;
