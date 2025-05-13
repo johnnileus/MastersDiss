@@ -40,6 +40,7 @@ public class RoadGenerator : MonoBehaviour {
 
     private List<HeadNode> headNodes = new List<HeadNode>();
     private List<RoadNode> nodes = new List<RoadNode>();
+    private QuadTree nodeTree = new QuadTree(1024);
 
     private float lastTicked;
     [SerializeField] private float tickDelay;
@@ -49,7 +50,6 @@ public class RoadGenerator : MonoBehaviour {
 
     [SerializeField] private float nodeDistance;
 
-    private QuadTree nodeTree = new QuadTree(1024);
 
     private int headCounter = 0;
     private int nodeCounter = 0;
@@ -59,14 +59,16 @@ public class RoadGenerator : MonoBehaviour {
     void Start()
     {
         lastTicked = Time.time;
-        headNodes.Add(new HeadNode(Vector3.zero, Vector3.forward, headCounter));
+        headNodes.Add(new HeadNode(new Vector3(512, 0, 512), Vector3.forward, headCounter));
         headCounter++;
+
+        
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (lastTicked + tickDelay < Time.time && false) {
+        if (lastTicked + tickDelay < Time.time) {
             IterateGraph();
             lastTicked = Time.time;
         }
@@ -90,19 +92,22 @@ public class RoadGenerator : MonoBehaviour {
     void IterateHead(HeadNode h) {
         if (h.disabled) return;
 
-        //create new node
+        //create node
         RoadNode n = new RoadNode(h.pos);
         n.ID = nodeCounter;
+        nodeCounter++;
         n.headID = h.ID;
+        
         if (h.PrevRoadNode != null) {
             n.connections.Add(h.PrevRoadNode);
         }
+
         h.PrevRoadNode?.connections.Add(n);
-        
-        
-        
         nodes.Add(n);
         DisplayNode(n);
+        nodeTree.AddNodeToTree(n);
+        
+        
         if (!(h.nodesSinceSplit < 1)) {
             RoadNode ClosestRoadNode = FindClosestNode(h);
             if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.8f) {
@@ -120,6 +125,7 @@ public class RoadGenerator : MonoBehaviour {
         h.PrevRoadNode = n;
         h.nodesSinceSplit++;
     }
+    
     
     void DisplayNode(RoadNode n) {
         Instantiate(testBall, n.pos, Quaternion.identity);
