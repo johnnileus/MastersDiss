@@ -3,18 +3,20 @@ using Unity.VisualScripting.FullSerializer;
 using UnityEngine;
 
 public class QuadNode {
-    public Vector2 min;
-    public Vector2 max;
-    public int depth;
-    public float width;
-    public List<Vector3> corners = new List<Vector3>();
+    private Vector2 min;
+    private Vector2 max;
+    private Vector2 center;
+    private int depth;
+    private float width;
+    private List<Vector3> corners = new List<Vector3>(); // world coordinates of each corner
 
-    public bool isLeaf = true;
+    private bool isLeaf = true;
     public List<QuadNode> children;
 
     public QuadNode(Vector2 minimum, int treeDepth, float w) {
         min = minimum;
         max = minimum + new Vector2(w, w);
+        center = minimum + new Vector2(w / 2, w / 2);
         depth = treeDepth;
         width = w;
         corners.Add(new Vector3(min.x, 0, min.y));
@@ -40,11 +42,12 @@ public class QuadNode {
     
     public void SplitNode() {
         isLeaf = false;
-        children = new List<QuadNode>();
-        children.Add(new QuadNode(min, depth+1, width/2));
-        children.Add(new QuadNode(min + new Vector2(width/2, 0), depth+1, width/2));
-        children.Add(new QuadNode(min + new Vector2(0, width/2), depth+1, width/2));
-        children.Add(new QuadNode(min + new Vector2(width/2, width/2), depth+1, width/2));
+        children = new List<QuadNode> {
+            new(min, depth + 1, width / 2),
+            new(min + new Vector2(width / 2, 0), depth + 1, width / 2),
+            new(min + new Vector2(0, width/2), depth+1, width/2),
+            new(min + new Vector2(width/2, width/2), depth+1, width/2)
+        };
     }
     
 
@@ -64,6 +67,9 @@ public class QuadTree {
     
     public void DrawTree() {
         root.DrawNode();
-        
+    }
+    
+    public void AddNode(RoadNode node) {
+        //TODO
     }
 }
