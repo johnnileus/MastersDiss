@@ -38,9 +38,11 @@ public class RoadGenerator : MonoBehaviour {
 
     [SerializeField] private GameObject testBall;
 
+    [SerializeField] private int networkWidth;
+    
     private List<HeadNode> headNodes = new List<HeadNode>();
     private List<RoadNode> nodes = new List<RoadNode>();
-    private QuadTree nodeTree = new QuadTree(1024);
+    private QuadTree nodeTree;
 
     private float lastTicked;
     [SerializeField] private float tickDelay;
@@ -62,7 +64,7 @@ public class RoadGenerator : MonoBehaviour {
         headNodes.Add(new HeadNode(new Vector3(512, 0, 512), Vector3.forward, headCounter));
         headCounter++;
 
-        
+        nodeTree = new QuadTree(networkWidth);
     }
 
     // Update is called once per frame
@@ -71,7 +73,9 @@ public class RoadGenerator : MonoBehaviour {
         if (lastTicked + tickDelay < Time.time) {
             IterateGraph();
             lastTicked = Time.time;
+                           
         }
+            
         nodeTree.DrawTree();
     }
     
@@ -106,17 +110,23 @@ public class RoadGenerator : MonoBehaviour {
         nodes.Add(n);
         DisplayNode(n);
         nodeTree.AddNodeToTree(n);
+        ;
         
         
         if (!(h.nodesSinceSplit < 1)) {
             RoadNode ClosestRoadNode = FindClosestNode(h);
             if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.8f) {
                 h.disabled = true;
+                disabledHeads++;
                 ClosestRoadNode.connections.Add(n);
                 n.connections.Add(ClosestRoadNode);
             }
         }
-
+        print(h.pos + " " + networkWidth);
+        if (h.pos.x < 0 || h.pos.x > networkWidth || h.pos.z < 0 || h.pos.z > networkWidth) {
+            h.disabled = true;
+            disabledHeads++;
+        }        
         
         
         Vector3 newDir = Quaternion.AngleAxis(Random.Range(-angleRandomness, angleRandomness), Vector3.up) * h.dir;
@@ -134,14 +144,18 @@ public class RoadGenerator : MonoBehaviour {
     RoadNode FindClosestNode(HeadNode h) {
         float closest = 10000f;
         RoadNode ClosestRoadNode = null;
+
+        List<RoadNode> nearNodes = nodeTree.GetNearRoadNodes(h.pos, 5);
         
-        for (int i = 0; i < nodes.Count; i++) {
-            RoadNode RoadNode = nodes[i];
-            if (RoadNode.headID != h.ID) {
-                float dist = Vector3.Distance(h.pos, RoadNode.pos);
+
+        
+        for (int i = 0; i < nearNodes.Count; i++) {
+            RoadNode roadNode = nearNodes[i];
+            if (roadNode.headID != h.ID) {
+                float dist = Vector3.Distance(h.pos, roadNode.pos);
                 if (closest > dist) {
                     closest = dist;
-                    ClosestRoadNode = nodes[i];
+                    ClosestRoadNode = nearNodes[i];
                 }
             }
         }   
