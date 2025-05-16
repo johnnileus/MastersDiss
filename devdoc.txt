@@ -1,0 +1,4 @@
+possible tests:
+- purging old heads
+- quadtree vs brute force
+- compute shader vs cpu

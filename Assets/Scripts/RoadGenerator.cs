@@ -4,9 +4,12 @@ using UnityEngine;
 using TMPro;
 
 //todo:
-// weighted direction changing
-// boundary
-// quad-tree/other
+//density texture
+// \_> nodes that try to stick to most or least change in density
+// generate overlay graph that only shows intersections
+// \_> find cycles in this new graph and find rough area for block designation
+ 
+
 
 public class HeadNode {
     public Vector3 pos;
@@ -41,6 +44,8 @@ public class RoadGenerator : MonoBehaviour {
     [SerializeField] private GameObject TextUI;
     private List<TMP_Text> UITexts = new List<TMP_Text>();
 
+    [SerializeField] private bool DrawQuadTree;
+    [SerializeField] private bool DrawGraph;
 
     [SerializeField] private int networkWidth;
     
@@ -55,6 +60,7 @@ public class RoadGenerator : MonoBehaviour {
     [SerializeField] private float angleRandomness;
 
     [SerializeField] private float nodeDistance;
+    [SerializeField] private int nodesUntilSplit;
 
 
     private int headCounter = 0;
@@ -77,28 +83,30 @@ public class RoadGenerator : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
+        if (DrawGraph) DrawConnections();
+        if (DrawQuadTree) nodeTree.DrawTree();
         if (lastTicked + tickDelay < Time.time) {
             IterateGraph();
             lastTicked = Time.time;
                            
         }
-            
-        nodeTree.DrawTree();
+
+;
     }
     
     void IterateGraph() {
         UITexts[0].text = "head nodes: " + headNodes.Count;
+        UITexts[1].text = "disabled heads: " + disabledHeads;
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
             
-            if (h.nodesSinceSplit > 8) {
+            if (h.nodesSinceSplit > nodesUntilSplit) {
                 SplitHeadNode(h);
             }
             
             IterateHead(h);
         }
         PurgeOldHeads();
-        DrawConnections();
     }
     
     void IterateHead(HeadNode h) {
@@ -183,7 +191,7 @@ public class RoadGenerator : MonoBehaviour {
     }
 
     void PurgeOldHeads() {
-        if (disabledHeads > 1000000) { 
+        if (disabledHeads > 100) { 
             List<HeadNode> newNodes = new List<HeadNode>();
             for (int i = 0; i < headNodes.Count; i++) {
                 if (!headNodes[i].disabled) {
@@ -191,6 +199,7 @@ public class RoadGenerator : MonoBehaviour {
                 }
             }
 
+            disabledHeads = 0;
             headNodes = newNodes;}
 
     }
@@ -200,7 +209,8 @@ public class RoadGenerator : MonoBehaviour {
         HeadNode newHead = new HeadNode(h.PrevRoadNode.pos + newDir * nodeDistance, newDir, headCounter);
 
         if (Vector3.Distance(FindClosestNode(newHead).pos, newHead.pos) < nodeDistance * .9f) {
-            //discard head
+            newHead.disabled = true;
+            return;
         }
         headCounter++;
         newHead.PrevRoadNode = h.PrevRoadNode;

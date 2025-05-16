@@ -31,7 +31,6 @@ public class QuadNode {
     }
     
     public void DrawNode() {
-        return;
         if (isLeaf) {
             Color col = Color.white;
             if (roadNodes.Count != 0) {
