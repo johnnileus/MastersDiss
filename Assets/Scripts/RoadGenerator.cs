@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEditor.TerrainTools;
 using UnityEngine;
+using TMPro;
 
 //todo:
 // weighted direction changing
@@ -37,6 +38,9 @@ public class RoadNode {
 public class RoadGenerator : MonoBehaviour {
 
     [SerializeField] private GameObject testBall;
+    [SerializeField] private GameObject TextUI;
+    private List<TMP_Text> UITexts = new List<TMP_Text>();
+
 
     [SerializeField] private int networkWidth;
     
@@ -63,6 +67,9 @@ public class RoadGenerator : MonoBehaviour {
         lastTicked = Time.time;
         headNodes.Add(new HeadNode(new Vector3(512, 0, 512), Vector3.forward, headCounter));
         headCounter++;
+        foreach (var text in TextUI.GetComponentsInChildren<TMP_Text>()) {
+            UITexts.Add(text);
+        }
 
         nodeTree = new QuadTree(networkWidth);
     }
@@ -80,6 +87,7 @@ public class RoadGenerator : MonoBehaviour {
     }
     
     void IterateGraph() {
+        UITexts[0].text = "head nodes: " + headNodes.Count;
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
             
@@ -115,14 +123,13 @@ public class RoadGenerator : MonoBehaviour {
         
         if (!(h.nodesSinceSplit < 1)) {
             RoadNode ClosestRoadNode = FindClosestNode(h);
-            if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.8f) {
+            if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.3f) {
                 h.disabled = true;
                 disabledHeads++;
                 ClosestRoadNode.connections.Add(n);
                 n.connections.Add(ClosestRoadNode);
             }
         }
-        print(h.pos + " " + networkWidth);
         if (h.pos.x < 0 || h.pos.x > networkWidth || h.pos.z < 0 || h.pos.z > networkWidth) {
             h.disabled = true;
             disabledHeads++;
@@ -176,7 +183,7 @@ public class RoadGenerator : MonoBehaviour {
     }
 
     void PurgeOldHeads() {
-        if (disabledHeads > 10) { 
+        if (disabledHeads > 1000000) { 
             List<HeadNode> newNodes = new List<HeadNode>();
             for (int i = 0; i < headNodes.Count; i++) {
                 if (!headNodes[i].disabled) {
