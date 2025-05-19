@@ -8,6 +8,7 @@ using TMPro;
 // \_> nodes that try to stick to most or least change in density
 // generate overlay graph that only shows intersections
 // \_> find cycles in this new graph and find rough area for block designation
+// scan random segments for distance between end points OR merge small cycles into larger ones
  
 
 
@@ -83,20 +84,21 @@ public class RoadGenerator : MonoBehaviour {
     // Update is called once per frame
     void Update()
     {
-        if (DrawGraph) DrawConnections();
-        if (DrawQuadTree) nodeTree.DrawTree();
+
         if (lastTicked + tickDelay < Time.time) {
             IterateGraph();
             lastTicked = Time.time;
                            
         }
-
+        if (DrawGraph) DrawConnections();
+        if (DrawQuadTree) nodeTree.DrawTree();
 ;
     }
     
     void IterateGraph() {
         UITexts[0].text = "head nodes: " + headNodes.Count;
         UITexts[1].text = "disabled heads: " + disabledHeads;
+        UITexts[2].text = "total nodes: " + nodes.Count;
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
             
@@ -126,31 +128,35 @@ public class RoadGenerator : MonoBehaviour {
         nodes.Add(n);
         DisplayNode(n);
         nodeTree.AddNodeToTree(n);
-        ;
         
         
-        if (!(h.nodesSinceSplit < 1)) {
+        if (!(h.nodesSinceSplit < 0)) {
             RoadNode ClosestRoadNode = FindClosestNode(h);
-            if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.3f) {
+            if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.5f) {
                 h.disabled = true;
                 disabledHeads++;
                 ClosestRoadNode.connections.Add(n);
                 n.connections.Add(ClosestRoadNode);
             }
         }
-        if (h.pos.x < 0 || h.pos.x > networkWidth || h.pos.z < 0 || h.pos.z > networkWidth) {
-            h.disabled = true;
-            disabledHeads++;
-        }        
+
         
         
         Vector3 newDir = Quaternion.AngleAxis(Random.Range(-angleRandomness, angleRandomness), Vector3.up) * h.dir;
         h.dir = newDir;
         h.pos += newDir * nodeDistance;
+        if (!NodeInBoundary(h.pos)) {
+            h.disabled = true;
+            disabledHeads++;
+        }        
         h.PrevRoadNode = n;
         h.nodesSinceSplit++;
     }
     
+    bool NodeInBoundary(Vector3 pos) {
+        if (pos.x < 0 || pos.x > networkWidth || pos.z < 0 || pos.z > networkWidth) return false;
+        return true;
+    }
     
     void DisplayNode(RoadNode n) {
         Instantiate(testBall, n.pos, Quaternion.identity);
@@ -160,7 +166,7 @@ public class RoadGenerator : MonoBehaviour {
         float closest = 10000f;
         RoadNode ClosestRoadNode = null;
 
-        List<RoadNode> nearNodes = nodeTree.GetNearRoadNodes(h.pos, 5);
+        List<RoadNode> nearNodes = nodeTree.GetNearRoadNodes(h.pos, nodeDistance);
         
 
         
@@ -200,14 +206,15 @@ public class RoadGenerator : MonoBehaviour {
             }
 
             disabledHeads = 0;
-            headNodes = newNodes;}
+            headNodes = newNodes;
+            
+        }
 
     }
     
     void SplitHeadNode(HeadNode h) {
         Vector3 newDir = Quaternion.AngleAxis(splitAngle, Vector3.up) * h.dir;
         HeadNode newHead = new HeadNode(h.PrevRoadNode.pos + newDir * nodeDistance, newDir, headCounter);
-
         if (Vector3.Distance(FindClosestNode(newHead).pos, newHead.pos) < nodeDistance * .9f) {
             newHead.disabled = true;
             return;

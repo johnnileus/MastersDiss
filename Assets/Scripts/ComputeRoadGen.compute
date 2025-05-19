@@ -1,0 +1,10 @@
+#pragma kernel CSMain
+
+// A buffer we can write to
+RWStructuredBuffer<int> resultBuffer;
+
+[numthreads(64, 1, 1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    resultBuffer[id.x] = int(id.x);
+}
