@@ -4,32 +4,41 @@ public class ComputeRoadGen : MonoBehaviour
 {
     public ComputeShader computeShader;
 
-    void Start()
-    {
-        int count = 64;
+    [SerializeField] private bool active;
+    
+    [SerializeField] private GameObject testBall;
+
+    [SerializeField] private float gridSize;
+
+
+
+    void Start() {
+        if (!active) return;
+        int count = 64000;
         
-        // Create a buffer to hold ints
-        ComputeBuffer buffer = new ComputeBuffer(count, sizeof(int));
-
-        // Find kernel ID
+        ComputeBuffer buffer = new ComputeBuffer(count, sizeof(float) * 2);
+        Vector2[] data = new Vector2[count];
+        
         int kernelID = computeShader.FindKernel("CSMain");
+        computeShader.SetBuffer(kernelID, "positions", buffer);
+        computeShader.SetFloat("gridSize", gridSize);
+        computeShader.SetFloat("seed", 1);
+        
+        computeShader.Dispatch(kernelID, count, 1, 1);
 
-        // Set the buffer in the shader
-        computeShader.SetBuffer(kernelID, "resultBuffer", buffer);
-
-        // Dispatch shader: (count / numthreads, 1, 1)
-        computeShader.Dispatch(kernelID, count / 64, 1, 1);
-
-        // Read back the data
-        int[] data = new int[count];
         buffer.GetData(data);
 
-        // Print it
         for (int i = 0; i < count; i++)
-        {
-            Debug.Log($"data[{i}] = {data[i]}");
+        { 
+            Debug.Log($"positions[{i}] = {data[i]}");
+            DisplayNode(data[i]);
+            
         }
 
         buffer.Release();
+    }
+    
+    void DisplayNode(Vector2 pos) {
+        Instantiate(testBall, new Vector3(pos.x, 0, pos.y), Quaternion.identity);
     }
 }

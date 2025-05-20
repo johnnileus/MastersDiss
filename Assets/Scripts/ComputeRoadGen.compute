@@ -1,10 +1,20 @@
 #pragma kernel CSMain
 
 // A buffer we can write to
-RWStructuredBuffer<int> resultBuffer;
+RWStructuredBuffer<float2> positions;
 
-[numthreads(64, 1, 1)]
+float gridSize;
+float seed;
+
+float rand(float2 id) {
+    return frac(sin(dot(id, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+[numthreads(1, 1, 1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    resultBuffer[id.x] = int(id.x);
+    float base = id.xy + seed.xx;
+    float x = rand(base);
+    float y = rand(base + float2(0.48124, 0.91294));
+    positions[id.x] = float2(x, y) * gridSize;
 }

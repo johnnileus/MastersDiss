@@ -41,6 +41,8 @@ public class RoadNode {
 
 public class RoadGenerator : MonoBehaviour {
 
+    [SerializeField] private bool active;
+    
     [SerializeField] private GameObject testBall;
     [SerializeField] private GameObject TextUI;
     private List<TMP_Text> UITexts = new List<TMP_Text>();
@@ -82,9 +84,8 @@ public class RoadGenerator : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update()
-    {
-
+    void Update() {
+        if (!active) return;
         if (lastTicked + tickDelay < Time.time) {
             IterateGraph();
             lastTicked = Time.time;
@@ -130,7 +131,7 @@ public class RoadGenerator : MonoBehaviour {
         nodeTree.AddNodeToTree(n);
         
         
-        if (!(h.nodesSinceSplit < 0)) {
+        if (!(h.nodesSinceSplit <= 1)) {
             RoadNode ClosestRoadNode = FindClosestNode(h);
             if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.5f) {
                 h.disabled = true;
