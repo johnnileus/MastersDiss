@@ -9,7 +9,7 @@ public class QuadNode {
     private Vector2 center;
     private int depth;
     private float width;
-    private List<Vector3> corners = new List<Vector3>(); // world coordinates of each corner
+    private List<Vector3> corners = new List<Vector3>(); // world coordinates of each corner, for debug lines
 
     private bool isLeaf = true;
     private List<QuadNode> children;
