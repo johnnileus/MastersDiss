@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using UnityEditor.TerrainTools;
 using UnityEngine;
 using TMPro;
+using Unity.Mathematics.Geometry;
+using UnityEngine.Serialization;
 
 //todo:
 //density texture
@@ -27,7 +29,6 @@ public class HeadNode {
 
     }
 }
-
 public class RoadNode {
     public Vector3 pos;
     public List<RoadNode> connections = new List<RoadNode>();
@@ -45,8 +46,9 @@ public class RoadGenerator : MonoBehaviour {
     
     [SerializeField] private GameObject testBall;
     [SerializeField] private GameObject TextUI;
+    [SerializeField] private Texture2D densityMap;
     private List<TMP_Text> UITexts = new List<TMP_Text>();
-
+    private GameObject mapMesh;
     [SerializeField] private bool DrawQuadTree;
     [SerializeField] private bool DrawGraph;
 
@@ -63,7 +65,8 @@ public class RoadGenerator : MonoBehaviour {
     [SerializeField] private float angleRandomness;
 
     [SerializeField] private float nodeDistance;
-    [SerializeField] private int nodesUntilSplit;
+    [SerializeField] private int lowerNodesUntilSplit; 
+    [SerializeField] private int UpperNodesUntilSplit;
 
 
     private int headCounter = 0;
@@ -76,6 +79,13 @@ public class RoadGenerator : MonoBehaviour {
         lastTicked = Time.time;
         headNodes.Add(new HeadNode(new Vector3(512, 0, 512), Vector3.forward, headCounter));
         headCounter++;
+
+        mapMesh = transform.GetChild(0).gameObject;
+        mapMesh.transform.localScale = new Vector3(networkWidth, networkWidth, 1);
+        mapMesh.transform.position = new Vector3(networkWidth / 2f, 0, networkWidth / 2f);
+
+        print(GetMapColour(new Vector3(512, 0, 512), densityMap));
+        
         foreach (var text in TextUI.GetComponentsInChildren<TMP_Text>()) {
             UITexts.Add(text);
         }
@@ -102,7 +112,8 @@ public class RoadGenerator : MonoBehaviour {
         UITexts[2].text = "total nodes: " + nodes.Count;
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
-            
+            float density = GetMapColour(h.pos, densityMap)[0];
+            float nodesUntilSplit = Mathf.Lerp(UpperNodesUntilSplit, lowerNodesUntilSplit, density);
             if (h.nodesSinceSplit > nodesUntilSplit) {
                 SplitHeadNode(h);
             }
@@ -214,7 +225,8 @@ public class RoadGenerator : MonoBehaviour {
     }
     
     void SplitHeadNode(HeadNode h) {
-        Vector3 newDir = Quaternion.AngleAxis(splitAngle, Vector3.up) * h.dir;
+        float direction = Random.value < 0.5f ? -1 : 1;
+        Vector3 newDir = Quaternion.AngleAxis(splitAngle * direction, Vector3.up) * h.dir;
         HeadNode newHead = new HeadNode(h.PrevRoadNode.pos + newDir * nodeDistance, newDir, headCounter);
         if (Vector3.Distance(FindClosestNode(newHead).pos, newHead.pos) < nodeDistance * .9f) {
             newHead.disabled = true;
@@ -228,4 +240,8 @@ public class RoadGenerator : MonoBehaviour {
         headCounter++;
     }
     
+    Color GetMapColour(Vector3 pos, Texture2D map) {
+        return map.GetPixelBilinear(pos.x / networkWidth, pos.z / networkWidth);
+    }
+       
 }

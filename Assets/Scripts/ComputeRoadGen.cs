@@ -6,9 +6,7 @@ public class ComputeRoadGen : MonoBehaviour
     public ComputeShader computeShader;
 
     [SerializeField] private bool active;
-    
     [SerializeField] private GameObject testBall;
-
     [SerializeField] private float gridSize;
 
     [StructLayout(LayoutKind.Sequential)]
@@ -27,6 +25,7 @@ public class ComputeRoadGen : MonoBehaviour
     [StructLayout(LayoutKind.Sequential)]
     struct HeadNode {
         public Vector2 pos;
+        public Vector2 dir;
         public int ID;
     }
 

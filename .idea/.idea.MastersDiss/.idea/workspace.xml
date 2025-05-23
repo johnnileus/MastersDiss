@@ -6,14 +6,11 @@
   <component name="ChangeListManager">
     <list default="true" id="64a05a0f-fd94-4589-8541-1567dc7f542e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MastersDiss/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MastersDiss/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Assets/skybox.mat" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/skybox.mat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Assets/skybox.mat.meta" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/skybox.mat.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Assets/testBall.mat" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Assets/testBall.mat" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Prefabs/TestBall.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Prefabs/TestBall.prefab" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/ComputeRoadGen.compute" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/ComputeRoadGen.compute" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/ComputeRoadGen.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/ComputeRoadGen.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scripts/QuadTree.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/QuadTree.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scripts/RoadGenerator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/RoadGenerator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Settings/SampleSceneProfile.asset" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Settings/SampleSceneProfile.asset" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,7 +101,7 @@
       <workItem from="1746556238395" duration="547000" />
       <workItem from="1746693366374" duration="31649000" />
       <workItem from="1747125536600" duration="15054000" />
-      <workItem from="1747391902770" duration="26443000" />
+      <workItem from="1747391902770" duration="33246000" />
     </task>
     <servers />
   </component>
@@ -115,5 +112,24 @@
   <component name="UnityUnitTestConfiguration" currentTestLauncher="Both" />
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DotNet Breakpoints">
+          <url>file://$PROJECT_DIR$/Assets/Scripts/RoadGenerator.cs</url>
+          <line>226</line>
+          <properties documentPath="C:\Users\Goines\Documents\GitHub\MastersDiss\Assets\Scripts\RoadGenerator.cs" initialLine="215" containingFunctionPresentation="Method 'SplitHeadNode'">
+            <startOffsets>
+              <option value="6877" />
+            </startOffsets>
+            <endOffsets>
+              <option value="6878" />
+            </endOffsets>
+          </properties>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

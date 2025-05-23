@@ -16,8 +16,15 @@ struct Connection {
     int endID;
 };
 
+struct HeadNode {
+    float2 pos;
+    float2 dir;
+    int ID;
+};
+
 RWStructuredBuffer<Node> nodes;
 RWStructuredBuffer<Connection> connections;
+RWStructuredBuffer<HeadNode> headNodes;
 
 float rand(float2 id) {
     return frac(sin(dot(id, float2(12.9898, 78.233))) * 43758.5453);
