@@ -11,24 +11,31 @@ using UnityEngine.Serialization;
 // generate overlay graph that only shows intersections
 // \_> find cycles in this new graph and find rough area for block designation
 // scan random segments for distance between end points OR merge small cycles into larger ones
+
+//create different starting configurations, such as star and circle seeds
+//merge smaller areas into larger ones
+// split areas into grid road networks
  
 
 
 public class HeadNode {
     public Vector3 pos;
     public Vector3 dir;
-    public RoadNode PrevRoadNode;
+    public RoadNode prevNode;
     public int nodesSinceSplit = 0;
     public bool disabled = false;
     public int ID = -1;
 
-    public HeadNode(Vector3 p, Vector3 d, int id) {
+    public HeadNode(Vector3 p, Vector3 d, int id, RoadNode prevRoadNode = null) {
         pos = p;
         dir = d;
         ID = id;
+        prevNode = prevRoadNode;
 
     }
 }
+
+
 public class RoadNode {
     public Vector3 pos;
     public List<RoadNode> connections = new List<RoadNode>();
@@ -67,7 +74,7 @@ public class RoadGenerator : MonoBehaviour {
     [SerializeField] private float nodeDistance;
     [SerializeField] private int lowerNodesUntilSplit; 
     [SerializeField] private int UpperNodesUntilSplit;
-
+    
 
     private int headCounter = 0;
     private int nodeCounter = 0;
@@ -77,20 +84,19 @@ public class RoadGenerator : MonoBehaviour {
     void Start()
     {
         lastTicked = Time.time;
-        headNodes.Add(new HeadNode(new Vector3(512, 0, 512), Vector3.forward, headCounter));
-        headCounter++;
+        nodeTree = new QuadTree(networkWidth);
+
 
         mapMesh = transform.GetChild(0).gameObject;
         mapMesh.transform.localScale = new Vector3(networkWidth, networkWidth, 1);
-        mapMesh.transform.position = new Vector3(networkWidth / 2f, 0, networkWidth / 2f);
+        mapMesh.transform.position = new Vector3(networkWidth / 2f, -1, networkWidth / 2f);
 
-        print(GetMapColour(new Vector3(512, 0, 512), densityMap));
         
         foreach (var text in TextUI.GetComponentsInChildren<TMP_Text>()) {
             UITexts.Add(text);
         }
+        InitialiseNodes();
 
-        nodeTree = new QuadTree(networkWidth);
     }
 
     // Update is called once per frame
@@ -132,11 +138,11 @@ public class RoadGenerator : MonoBehaviour {
         nodeCounter++;
         n.headID = h.ID;
         
-        if (h.PrevRoadNode != null) {
-            n.connections.Add(h.PrevRoadNode);
+        if (h.prevNode != null) {
+            n.connections.Add(h.prevNode);
         }
 
-        h.PrevRoadNode?.connections.Add(n);
+        h.prevNode?.connections.Add(n);
         nodes.Add(n);
         DisplayNode(n);
         nodeTree.AddNodeToTree(n);
@@ -161,7 +167,7 @@ public class RoadGenerator : MonoBehaviour {
             h.disabled = true;
             disabledHeads++;
         }        
-        h.PrevRoadNode = n;
+        h.prevNode = n;
         h.nodesSinceSplit++;
     }
     
@@ -227,21 +233,38 @@ public class RoadGenerator : MonoBehaviour {
     void SplitHeadNode(HeadNode h) {
         float direction = Random.value < 0.5f ? -1 : 1;
         Vector3 newDir = Quaternion.AngleAxis(splitAngle * direction, Vector3.up) * h.dir;
-        HeadNode newHead = new HeadNode(h.PrevRoadNode.pos + newDir * nodeDistance, newDir, headCounter);
+        HeadNode newHead = new HeadNode(h.prevNode.pos + newDir * nodeDistance, newDir, headCounter);
         if (Vector3.Distance(FindClosestNode(newHead).pos, newHead.pos) < nodeDistance * .9f) {
             newHead.disabled = true;
             return;
         }
         headCounter++;
-        newHead.PrevRoadNode = h.PrevRoadNode;
-        headNodes.Add(newHead);
+        newHead.prevNode = h.prevNode;
         h.nodesSinceSplit = 0;
         h.ID = headCounter;
-        headCounter++;
+        AddHead(newHead);
     }
     
     Color GetMapColour(Vector3 pos, Texture2D map) {
         return map.GetPixelBilinear(pos.x / networkWidth, pos.z / networkWidth);
     }
-       
+    
+    void CreateHead(Vector3 pos, Vector3 dir, RoadNode prevRoadNode = null) {
+        headNodes.Add(new HeadNode(pos, dir, headCounter, prevRoadNode: prevRoadNode));
+        headCounter++;
+    }
+    void AddHead(HeadNode h) {
+        headNodes.Add(h);
+        headCounter++;
+    }
+    
+    void InitialiseNodes() {
+        Vector3 center = new Vector3(networkWidth / 2f, 0, networkWidth / 2f);
+        RoadNode node = new RoadNode(center);
+        nodes.Add(node);
+        DisplayNode(node);
+        nodeTree.AddNodeToTree(node);
+        CreateHead(center + Vector3.forward * nodeDistance, Vector3.forward, prevRoadNode:node);
+        CreateHead(center + Vector3.forward * -nodeDistance, Vector3.back, prevRoadNode:node);
+    }
 }

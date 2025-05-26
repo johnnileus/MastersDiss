@@ -118,7 +118,7 @@ public class QuadNode {
 public class QuadTree {
     public float width;
     public QuadNode root;
-    private int maxRoadNodes = 8;
+    private int maxRoadNodes = 8; // test this
 
     public QuadTree(float w) {
         width = w;

@@ -562,54 +562,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &942908752
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 942908754}
-  - component: {fileID: 942908753}
-  m_Layer: 0
-  m_Name: Road Generator Compute
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &942908753
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 942908752}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 195e7c741705c5a41b9d97c8b3669800, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  computeShader: {fileID: 7200000, guid: 27f58e0a1c3a7bc4b82e947319acfe68, type: 3}
-  active: 0
-  testBall: {fileID: 3977325185824756651, guid: de9bac14261304b4fba1b36afde7b643, type: 3}
-  gridSize: 1024
---- !u!4 &942908754
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 942908752}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1094692503
 GameObject:
   m_ObjectHideFlags: 0
@@ -1302,15 +1254,15 @@ MonoBehaviour:
   testBall: {fileID: 3977325185824756651, guid: de9bac14261304b4fba1b36afde7b643, type: 3}
   TextUI: {fileID: 1591360334}
   densityMap: {fileID: 2800000, guid: 90a5788dfd00bd64e83b49b55f4b8909, type: 3}
-  DrawQuadTree: 0
+  DrawQuadTree: 1
   DrawGraph: 1
   networkWidth: 1024
   tickDelay: 0
   splitAngle: 90
   angleRandomness: 15
-  nodeDistance: 2
+  nodeDistance: 10
   lowerNodesUntilSplit: 5
-  UpperNodesUntilSplit: 50
+  UpperNodesUntilSplit: 35
 --- !u!4 &1952394356
 Transform:
   m_ObjectHideFlags: 0
@@ -1335,6 +1287,5 @@ SceneRoots:
   - {fileID: 410087041}
   - {fileID: 832575519}
   - {fileID: 1952394356}
-  - {fileID: 942908754}
   - {fileID: 1591360336}
   - {fileID: 1094692506}
