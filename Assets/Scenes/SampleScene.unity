@@ -1254,13 +1254,13 @@ MonoBehaviour:
   testBall: {fileID: 3977325185824756651, guid: de9bac14261304b4fba1b36afde7b643, type: 3}
   TextUI: {fileID: 1591360334}
   densityMap: {fileID: 2800000, guid: 90a5788dfd00bd64e83b49b55f4b8909, type: 3}
-  DrawQuadTree: 1
+  DrawQuadTree: 0
   DrawGraph: 1
   networkWidth: 1024
   tickDelay: 0
   splitAngle: 90
   angleRandomness: 15
-  nodeDistance: 10
+  nodeDistance: 8
   lowerNodesUntilSplit: 5
   UpperNodesUntilSplit: 35
 --- !u!4 &1952394356

@@ -35,10 +35,17 @@ public class HeadNode {
     }
 }
 
+public class HalfEdge {
+    public RoadNode CW;
+    public RoadNode CCW;
+    public bool visitedCW;
+    public bool visitedCCW;
+}
 
 public class RoadNode {
     public Vector3 pos;
     public List<RoadNode> connections = new List<RoadNode>();
+    public List<HalfEdge> edges = new List<HalfEdge>();
     public int headID = -1;
     public int ID;
 
@@ -73,7 +80,7 @@ public class RoadGenerator : MonoBehaviour {
 
     [SerializeField] private float nodeDistance;
     [SerializeField] private int lowerNodesUntilSplit; 
-    [SerializeField] private int UpperNodesUntilSplit;
+    [SerializeField] private int upperNodesUntilSplit;
     
 
     private int headCounter = 0;
@@ -116,12 +123,14 @@ public class RoadGenerator : MonoBehaviour {
         UITexts[0].text = "head nodes: " + headNodes.Count;
         UITexts[1].text = "disabled heads: " + disabledHeads;
         UITexts[2].text = "total nodes: " + nodes.Count;
+        
+        //loop over every head node
         for (int i = 0; i < headNodes.Count; i++) {
             HeadNode h = headNodes[i];
             float density = GetMapColour(h.pos, densityMap)[0];
-            float nodesUntilSplit = Mathf.Lerp(UpperNodesUntilSplit, lowerNodesUntilSplit, density);
+            float nodesUntilSplit = Mathf.Lerp(upperNodesUntilSplit, lowerNodesUntilSplit, density); // get nodes until split based on density map
             if (h.nodesSinceSplit > nodesUntilSplit) {
-                SplitHeadNode(h);
+                 SplitHeadNode(h); //TODO
             }
             
             IterateHead(h);
@@ -132,10 +141,9 @@ public class RoadGenerator : MonoBehaviour {
     void IterateHead(HeadNode h) {
         if (h.disabled) return;
 
+        
         //create node
-        RoadNode n = new RoadNode(h.pos);
-        n.ID = nodeCounter;
-        nodeCounter++;
+        RoadNode n = CreateNode(h.pos);
         n.headID = h.ID;
         
         if (h.prevNode != null) {
@@ -143,9 +151,7 @@ public class RoadGenerator : MonoBehaviour {
         }
 
         h.prevNode?.connections.Add(n);
-        nodes.Add(n);
-        DisplayNode(n);
-        nodeTree.AddNodeToTree(n);
+
         
         
         if (!(h.nodesSinceSplit <= 1)) {
@@ -234,10 +240,12 @@ public class RoadGenerator : MonoBehaviour {
         float direction = Random.value < 0.5f ? -1 : 1;
         Vector3 newDir = Quaternion.AngleAxis(splitAngle * direction, Vector3.up) * h.dir;
         HeadNode newHead = new HeadNode(h.prevNode.pos + newDir * nodeDistance, newDir, headCounter);
+        
         if (Vector3.Distance(FindClosestNode(newHead).pos, newHead.pos) < nodeDistance * .9f) {
             newHead.disabled = true;
             return;
         }
+        
         headCounter++;
         newHead.prevNode = h.prevNode;
         h.nodesSinceSplit = 0;
@@ -258,12 +266,21 @@ public class RoadGenerator : MonoBehaviour {
         headCounter++;
     }
     
+    RoadNode CreateNode(Vector3 pos) {
+        RoadNode n = new RoadNode(pos);
+        n.ID = nodeCounter;
+        nodeCounter++;
+        
+        nodes.Add(n);
+        DisplayNode(n);
+        nodeTree.AddNodeToTree(n);
+        
+        return n;
+    }
+    
     void InitialiseNodes() {
         Vector3 center = new Vector3(networkWidth / 2f, 0, networkWidth / 2f);
-        RoadNode node = new RoadNode(center);
-        nodes.Add(node);
-        DisplayNode(node);
-        nodeTree.AddNodeToTree(node);
+        RoadNode node = CreateNode(center);
         CreateHead(center + Vector3.forward * nodeDistance, Vector3.forward, prevRoadNode:node);
         CreateHead(center + Vector3.forward * -nodeDistance, Vector3.back, prevRoadNode:node);
     }
