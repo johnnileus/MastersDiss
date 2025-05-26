@@ -1262,7 +1262,7 @@ MonoBehaviour:
   angleRandomness: 15
   nodeDistance: 8
   lowerNodesUntilSplit: 5
-  UpperNodesUntilSplit: 35
+  upperNodesUntilSplit: 35
 --- !u!4 &1952394356
 Transform:
   m_ObjectHideFlags: 0

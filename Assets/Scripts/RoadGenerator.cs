@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Net;
 using UnityEditor.TerrainTools;
 using UnityEngine;
 using TMPro;
@@ -36,15 +37,17 @@ public class HeadNode {
 }
 
 public class HalfEdge {
-    public RoadNode CW;
-    public RoadNode CCW;
-    public bool visitedCW;
-    public bool visitedCCW;
+    public RoadNode to;
+    public bool visitedFrom;
+    public bool visitedTo;
+    
+    public HalfEdge(RoadNode to) {
+        this.to = to;
+    }
 }
 
 public class RoadNode {
     public Vector3 pos;
-    public List<RoadNode> connections = new List<RoadNode>();
     public List<HalfEdge> edges = new List<HalfEdge>();
     public int headID = -1;
     public int ID;
@@ -147,20 +150,22 @@ public class RoadGenerator : MonoBehaviour {
         n.headID = h.ID;
         
         if (h.prevNode != null) {
-            n.connections.Add(h.prevNode);
+            //node pointer
+            
+            //half edge
+            CreateConnection(n, h.prevNode);
         }
 
-        h.prevNode?.connections.Add(n);
 
         
-        
+        // check if any nodes from other branches are nearby.
         if (!(h.nodesSinceSplit <= 1)) {
             RoadNode ClosestRoadNode = FindClosestNode(h);
             if (ClosestRoadNode != null && Vector3.Distance(ClosestRoadNode.pos, h.pos) < nodeDistance * 1.5f) {
                 h.disabled = true;
                 disabledHeads++;
-                ClosestRoadNode.connections.Add(n);
-                n.connections.Add(ClosestRoadNode);
+                
+                CreateConnection(n, ClosestRoadNode);
             }
         }
 
@@ -186,6 +191,11 @@ public class RoadGenerator : MonoBehaviour {
         Instantiate(testBall, n.pos, Quaternion.identity);
     }
     
+    void CreateConnection(RoadNode n1, RoadNode n2) {
+        n1.edges.Add(new HalfEdge(n2));
+        n2.edges.Add(new HalfEdge(n1));
+    }
+    
     RoadNode FindClosestNode(HeadNode h) {
         float closest = 10000f;
         RoadNode ClosestRoadNode = null;
@@ -209,13 +219,10 @@ public class RoadGenerator : MonoBehaviour {
     
     void DrawConnections() {
         for (int i = 0; i < nodes.Count; i++) {
-            RoadNode RoadNode = nodes[i];
-
-            for (int j = 0; j < RoadNode.connections.Count; j++) {
-                RoadNode neighbour = RoadNode.connections[j];
-                Vector3 pos1 = RoadNode.pos;
-                Vector3 pos2 = neighbour.pos;
-                Debug.DrawLine(pos1, pos2, Color.red, tickDelay);
+            RoadNode node = nodes[i];
+            for (int j = 0; j < node.edges.Count; j++) {
+                RoadNode to = node.edges[j].to;
+                Debug.DrawLine(node.pos, to.pos, Color.red, tickDelay);
             }
         }
     }
