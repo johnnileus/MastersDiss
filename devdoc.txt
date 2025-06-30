@@ -2,3 +2,20 @@ possible tests:
 - purging old heads
 - quadtree vs brute force
 - compute shader vs cpu
+
+
+
+
+Chunk-Based Generation:
+
+Algorithm Zero: Grid-based chunk and road layout
+ -> randomise positions for less uniform results?
+
+Algorithm One: Wave Function Collapse
+ -> use voronoi to create parcels, perform wfc starting from edges as given seeds
+
+Algorithm Two: Seeded Border Generation
+ -> generate common points along chunk borders to begin as seeds for generation
+
+Algorithm Three: Parcel Subdivision
+ -> divide chunks recursively into parcels, similar to alg one
