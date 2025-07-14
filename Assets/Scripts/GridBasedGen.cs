@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Net;
 using UnityEngine;
@@ -27,10 +28,13 @@ public class HalfEdge{
 }
 
 public class Chunk {
+
+
     public Vector2 chunkID;
 
     public Vector2 minPos;
     public Vector2 maxPos;
+    public Vector2 center;
     public Vector3[] corners;
 
     private Vector2 size;
@@ -43,6 +47,7 @@ public class Chunk {
 
         minPos = new Vector2(x * chunkSize.x, y * chunkSize.y);
         maxPos = new Vector2((x + 1) * chunkSize.x, (y + 1) * chunkSize.y);
+        center = minPos + chunkSize / 2;
 
         corners = new[] {
             new Vector3(minPos.x, 0, minPos.y),
@@ -54,10 +59,10 @@ public class Chunk {
     
     public void DrawChunk() {
         Color col = Color.red;
-        Debug.DrawLine(corners[0], corners[1], col);
-        Debug.DrawLine(corners[0], corners[2], col);
-        Debug.DrawLine(corners[1], corners[3], col);
-        Debug.DrawLine(corners[2], corners[3], col);
+        // Debug.DrawLine(corners[0], corners[1], col);
+        // Debug.DrawLine(corners[0], corners[2], col);
+        // Debug.DrawLine(corners[1], corners[3], col);
+        // Debug.DrawLine(corners[2], corners[3], col);
         foreach (var node in nodes) {
             Debug.DrawLine(node.pos, node.pos + Vector3.up*50, col);
             foreach (var edge in node.edges) {
@@ -71,7 +76,7 @@ public class Chunk {
         Vector2 gap = new Vector2(size.x / (w + 1), size.y / (h + 1));
         for (int y = 0; y < h + 2; y++) {
             for (int x = 0; x < w + 2; x++) {
-                RoadNode node = new RoadNode((x)*gap.x, (y)*gap.y);
+                RoadNode node = new RoadNode((x)*gap.x + minPos.x, (y)*gap.y + minPos.y);
                 nodes.Add(node);
 
                 if (y != 0) {
@@ -100,10 +105,11 @@ public class Chunk {
 }
 
 
-public class GridBasedGen : MonoBehaviour {
+public class GridBasedGen : MonoBehaviour{
 
-
+    [SerializeField] public GameObject playerObj;
     [SerializeField] public Vector2 chunkSize;
+    [SerializeField] public int renderDistance;
     public Dictionary<(int x, int y), Chunk> chunks = new Dictionary<(int x, int y), Chunk>();
     
     
@@ -124,11 +130,19 @@ public class GridBasedGen : MonoBehaviour {
     }
 
     void Start() {
-        CreateChunk(0, 0);
     }
 
-    void Update()
-    {
+    void Update(){
+
+        Vector3 plrPos = playerObj.transform.position;
+        Vector2Int plrChunk = new Vector2Int(Mathf.RoundToInt(plrPos.x / chunkSize.x), Mathf.RoundToInt(plrPos.z / chunkSize.y));
+        
+        for (int y = -renderDistance; y < renderDistance; y++) {
+            for (int x = -renderDistance; x < renderDistance; x++) {
+                Debug.Log(CreateChunk(plrChunk.x + x, plrChunk.y + y));
+            }
+        }
+        
         foreach (var chunk in chunks) {
             chunk.Value.DrawChunk();
         }
