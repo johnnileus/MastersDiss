@@ -39,17 +39,17 @@ public class Chunk {
     public Vector3 vec3Center;
     public Vector3[] corners;
 
-    private Vector2 size;
+    private float size;
 
     public List<RoadNode> nodes = new List<RoadNode>();
     
-    public Chunk(int x, int y, Vector2 chunkSize){
+    public Chunk(int x, int y, float chunkSize){
         size = chunkSize;
         chunkID = new Vector2(x, y);
 
-        minPos = new Vector2(x * chunkSize.x, y * chunkSize.y);
-        maxPos = new Vector2((x + 1) * chunkSize.x, (y + 1) * chunkSize.y);
-        center = minPos + chunkSize / 2;
+        minPos = new Vector2(x * chunkSize, y * chunkSize);
+        maxPos = new Vector2((x + 1) * chunkSize, (y + 1) * chunkSize);
+        center = minPos + new Vector2(chunkSize, chunkSize) / 2;
         vec3Center = new Vector3(center.x, 0, center.y);
 
         corners = new[] {
@@ -76,7 +76,7 @@ public class Chunk {
     
     // w,h = # of inside roads
     public void GenerateRoads(int w, int h){
-        Vector2 gap = new Vector2(size.x / (w + 1), size.y / (h + 1));
+        Vector2 gap = new Vector2(size / (w + 1), size / (h + 1));
         for (int y = 0; y < h + 2; y++) {
             for (int x = 0; x < w + 2; x++) {
                 RoadNode node = new RoadNode((x)*gap.x + minPos.x, (y)*gap.y + minPos.y);
@@ -111,7 +111,7 @@ public class Chunk {
 public class GridBasedGen : MonoBehaviour{
 
     [SerializeField] public GameObject playerObj;
-    [SerializeField] public Vector2 chunkSize;
+    [SerializeField] public int chunkSize;
     [SerializeField] public int renderDistance;
     public Dictionary<(int x, int y), Chunk> chunks = new Dictionary<(int x, int y), Chunk>();
     
@@ -125,7 +125,7 @@ public class GridBasedGen : MonoBehaviour{
 
         Chunk newChunk = new Chunk(x, y, chunkSize);
 
-        newChunk.GenerateRoads(3, 5);
+        newChunk.GenerateRoads(1,1);
         
         chunks.Add((x,y), newChunk);
 
@@ -138,7 +138,7 @@ public class GridBasedGen : MonoBehaviour{
     void Update(){
 
         Vector3 plrPos = playerObj.transform.position;
-        Vector2Int plrChunk = new Vector2Int(Mathf.FloorToInt(plrPos.x / chunkSize.x), Mathf.FloorToInt(plrPos.z / chunkSize.y));
+        Vector2Int plrChunk = new Vector2Int(Mathf.FloorToInt(plrPos.x / chunkSize), Mathf.FloorToInt(plrPos.z / chunkSize));
         
 
         //generate chunks
@@ -152,7 +152,7 @@ public class GridBasedGen : MonoBehaviour{
                     new Vector2(plrChunk.x, plrChunk.y)
                 );
                 
-                if (distToPlr <= renderDistance * chunkSize.x) {
+                if (distToPlr <= renderDistance * chunkSize) {
 
                     CreateChunk(currentChunkCoords.x, currentChunkCoords.y);
                 }
@@ -163,7 +163,7 @@ public class GridBasedGen : MonoBehaviour{
         List<(int, int)> chunksToDelete = new List<(int, int)>();
         foreach (var chunk in chunks) {
             float distToPlr = Vector3.Distance(chunk.Value.vec3Center, plrPos);
-            if (distToPlr > renderDistance * chunkSize.x) {
+            if (distToPlr > renderDistance * chunkSize) {
                 chunksToDelete.Add(chunk.Key);
             }
         } foreach (var key in chunksToDelete) {
