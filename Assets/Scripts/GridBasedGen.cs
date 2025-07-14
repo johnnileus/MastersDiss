@@ -6,6 +6,7 @@ using UnityEngine;
 using TMPro;
 using Unity.Mathematics;
 using Unity.Mathematics.Geometry;
+using Unity.VisualScripting;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine.Serialization;
 using Debug = UnityEngine.Debug;
@@ -35,6 +36,7 @@ public class Chunk {
     public Vector2 minPos;
     public Vector2 maxPos;
     public Vector2 center;
+    public Vector3 vec3Center;
     public Vector3[] corners;
 
     private Vector2 size;
@@ -48,6 +50,7 @@ public class Chunk {
         minPos = new Vector2(x * chunkSize.x, y * chunkSize.y);
         maxPos = new Vector2((x + 1) * chunkSize.x, (y + 1) * chunkSize.y);
         center = minPos + chunkSize / 2;
+        vec3Center = new Vector3(center.x, 0, center.y);
 
         corners = new[] {
             new Vector3(minPos.x, 0, minPos.y),
@@ -135,14 +138,39 @@ public class GridBasedGen : MonoBehaviour{
     void Update(){
 
         Vector3 plrPos = playerObj.transform.position;
-        Vector2Int plrChunk = new Vector2Int(Mathf.RoundToInt(plrPos.x / chunkSize.x), Mathf.RoundToInt(plrPos.z / chunkSize.y));
+        Vector2Int plrChunk = new Vector2Int(Mathf.FloorToInt(plrPos.x / chunkSize.x), Mathf.FloorToInt(plrPos.z / chunkSize.y));
         
+
+        //generate chunks
         for (int y = -renderDistance; y < renderDistance; y++) {
             for (int x = -renderDistance; x < renderDistance; x++) {
-                Debug.Log(CreateChunk(plrChunk.x + x, plrChunk.y + y));
+                
+                Vector2Int currentChunkCoords = new Vector2Int(plrChunk.x + x, plrChunk.y + y);
+
+                float distToPlr = Vector2.Distance(
+                    new Vector2(currentChunkCoords.x, currentChunkCoords.y),
+                    new Vector2(plrChunk.x, plrChunk.y)
+                );
+                
+                if (distToPlr <= renderDistance * chunkSize.x) {
+
+                    CreateChunk(currentChunkCoords.x, currentChunkCoords.y);
+                }
             }
         }
         
+        //delete distant chunks
+        List<(int, int)> chunksToDelete = new List<(int, int)>();
+        foreach (var chunk in chunks) {
+            float distToPlr = Vector3.Distance(chunk.Value.vec3Center, plrPos);
+            if (distToPlr > renderDistance * chunkSize.x) {
+                chunksToDelete.Add(chunk.Key);
+            }
+        } foreach (var key in chunksToDelete) {
+            chunks.Remove(key);
+        }
+        
+        //draw each chunk
         foreach (var chunk in chunks) {
             chunk.Value.DrawChunk();
         }
