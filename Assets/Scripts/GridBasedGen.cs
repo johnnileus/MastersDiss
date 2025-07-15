@@ -38,13 +38,15 @@ public class Chunk {
     public Vector2 center;
     public Vector3 vec3Center;
     public Vector3[] corners;
+    public float nodeJitter;
 
     private float size;
 
     public List<RoadNode> nodes = new List<RoadNode>();
-    
-    public Chunk(int x, int y, float chunkSize){
+
+    public Chunk(int x, int y, float chunkSize, float jitter){
         size = chunkSize;
+        nodeJitter = chunkSize * jitter; // convert 0 -> 1 to 0 -> distance to chunkSize;
         chunkID = new Vector2(x, y);
 
         minPos = new Vector2(x * chunkSize, y * chunkSize);
@@ -58,6 +60,11 @@ public class Chunk {
             new Vector3(minPos.x, 0, maxPos.y),
             new Vector3(maxPos.x, 0, maxPos.y)
         };
+
+    }
+
+    public float GetChunkSeed(float x, float y){
+        return x * 1619.5125f + y * 31337.65125f;
     }
     
     public void DrawChunk() {
@@ -67,7 +74,7 @@ public class Chunk {
         // Debug.DrawLine(corners[1], corners[3], col);
         // Debug.DrawLine(corners[2], corners[3], col);
         foreach (var node in nodes) {
-            Debug.DrawLine(node.pos, node.pos + Vector3.up*50, col);
+            // Debug.DrawLine(node.pos, node.pos + Vector3.up*50, col);
             foreach (var edge in node.edges) {
                 Debug.DrawLine(node.pos, edge.to.pos, Color.cyan);
             }
@@ -79,7 +86,21 @@ public class Chunk {
         Vector2 gap = new Vector2(size / (w + 1), size / (h + 1));
         for (int y = 0; y < h + 2; y++) {
             for (int x = 0; x < w + 2; x++) {
-                RoadNode node = new RoadNode((x)*gap.x + minPos.x, (y)*gap.y + minPos.y);
+                Vector2 nodePos = new Vector2(x*gap.x + minPos.x, y*gap.y + minPos.y);
+
+
+                float noiseScale = 159.23f;
+                float noiseX = Mathf.PerlinNoise(nodePos.x * noiseScale, nodePos.y * noiseScale);
+                float noiseY = Mathf.PerlinNoise(nodePos.x * noiseScale + 1000f, nodePos.y * noiseScale + 1000f);
+
+
+                Vector2 offset = new Vector2(noiseX * 2 - 1, noiseY * 2 - 1) * nodeJitter;
+
+                nodePos += offset;
+                
+
+                
+                RoadNode node = new RoadNode(nodePos.x, nodePos.y);
                 nodes.Add(node);
 
                 if (y != 0) {
@@ -113,6 +134,8 @@ public class GridBasedGen : MonoBehaviour{
     [SerializeField] public GameObject playerObj;
     [SerializeField] public int chunkSize;
     [SerializeField] public int renderDistance;
+    [SerializeField] public Vector2Int roadPartitions;
+    [SerializeField] public float nodeJitter;
     public Dictionary<(int x, int y), Chunk> chunks = new Dictionary<(int x, int y), Chunk>();
     
     
@@ -123,9 +146,9 @@ public class GridBasedGen : MonoBehaviour{
             return false;
         }
 
-        Chunk newChunk = new Chunk(x, y, chunkSize);
+        Chunk newChunk = new Chunk(x, y, chunkSize, nodeJitter);
 
-        newChunk.GenerateRoads(1,1);
+        newChunk.GenerateRoads(roadPartitions.x, roadPartitions.y);
         
         chunks.Add((x,y), newChunk);
 
@@ -136,7 +159,6 @@ public class GridBasedGen : MonoBehaviour{
     }
 
     void Update(){
-
         Vector3 plrPos = playerObj.transform.position;
         Vector2Int plrChunk = new Vector2Int(Mathf.FloorToInt(plrPos.x / chunkSize), Mathf.FloorToInt(plrPos.z / chunkSize));
         
