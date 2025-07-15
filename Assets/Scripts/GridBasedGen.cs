@@ -10,6 +10,7 @@ using Unity.VisualScripting;
 using Unity.VisualScripting.FullSerializer;
 using UnityEngine.Serialization;
 using Debug = UnityEngine.Debug;
+using Random = UnityEngine.Random;
 
 public class RoadNode{
     public Vector3 pos;
@@ -76,7 +77,8 @@ public class Chunk {
         foreach (var node in nodes) {
             // Debug.DrawLine(node.pos, node.pos + Vector3.up*50, col);
             foreach (var edge in node.edges) {
-                Debug.DrawLine(node.pos, edge.to.pos, Color.cyan);
+                Vector3 offset = new Vector3(Random.value, 0, Random.value) * 50f;
+                Debug.DrawLine(node.pos + offset, edge.to.pos, new Color(Random.value, Random.value, Random.value));
             }
         }
     }
@@ -92,28 +94,36 @@ public class Chunk {
                 float noiseScale = 159.23f;
                 float noiseX = Mathf.PerlinNoise(nodePos.x * noiseScale, nodePos.y * noiseScale);
                 float noiseY = Mathf.PerlinNoise(nodePos.x * noiseScale + 1000f, nodePos.y * noiseScale + 1000f);
-
-
-                Vector2 offset = new Vector2(noiseX * 2 - 1, noiseY * 2 - 1) * nodeJitter;
-
-                nodePos += offset;
                 
-
+                Vector2 offset = new Vector2(noiseX * 2 - 1, noiseY * 2 - 1) * nodeJitter;
+                nodePos += offset;
                 
                 RoadNode node = new RoadNode(nodePos.x, nodePos.y);
                 nodes.Add(node);
 
+                if (y == 0) {
+                    
+                }
+                
+                
                 if (y != 0) {
                     //left edge
                     if (x == 0 && y != h + 2) {
-                        HalfEdge edge = new HalfEdge(nodes[(y - 1) * (w + 2)]);
-                        nodes[y * (w + 2)].edges.Add(edge);
+                        HalfEdge awayEdge = new HalfEdge(nodes[(y - 1) * (w + 2)]);
+                        nodes[y * (w + 2)].edges.Add(awayEdge);
+                        HalfEdge toEdge = new HalfEdge(nodes[(y) * (w + 2)]);
+                        nodes[(y-1) * (w + 2)].edges.Add(toEdge);
                     }
                     else {
-                        HalfEdge southEdge = new HalfEdge(nodes[(y - 1) * (w + 2) + x]);
-                        HalfEdge westEdge = new HalfEdge(nodes[y * (w + 2) + x - 1]);
-                        nodes[y * (w + 2) + x].edges.Add(southEdge);
-                        nodes[y * (w + 2) + x].edges.Add(westEdge);
+                        HalfEdge southAwayEdge = new HalfEdge(nodes[(y - 1) * (w + 2) + x]);
+                        HalfEdge westAwayEdge = new HalfEdge(nodes[y * (w + 2) + x - 1]);
+                        nodes[y * (w + 2) + x].edges.Add(southAwayEdge);
+                        nodes[y * (w + 2) + x].edges.Add(westAwayEdge);
+                        
+                        HalfEdge southToEdge = new HalfEdge(nodes[y * (w + 2) + x]);
+                        HalfEdge westToEdge = new HalfEdge(nodes[y * (w + 2) + x ]);
+                        nodes[(y - 1) * (w + 2) + x].edges.Add(southToEdge);
+                        nodes[y * (w + 2) + x - 1].edges.Add(westToEdge);
                     }
                 }
                 else {
