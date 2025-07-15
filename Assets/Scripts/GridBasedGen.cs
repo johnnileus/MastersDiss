@@ -101,36 +101,36 @@ public class Chunk {
                 RoadNode node = new RoadNode(nodePos.x, nodePos.y);
                 nodes.Add(node);
 
-                if (y == 0) {
-                    
-                }
-                
-                
+
+                //edges only need one halfedge, as the other is in adjacent chunk
                 if (y != 0) {
                     //left edge
-                    if (x == 0 && y != h + 2) {
-                        HalfEdge awayEdge = new HalfEdge(nodes[(y - 1) * (w + 2)]);
-                        nodes[y * (w + 2)].edges.Add(awayEdge);
-                        HalfEdge toEdge = new HalfEdge(nodes[(y) * (w + 2)]);
-                        nodes[(y-1) * (w + 2)].edges.Add(toEdge);
+                    if (x == 0) {
+                        HalfEdge southToEdge = new HalfEdge(nodes[(y) * (w + 2)]);
+                        nodes[(y-1) * (w + 2)].edges.Add(southToEdge);
                     }
+                    
                     else {
-                        HalfEdge southAwayEdge = new HalfEdge(nodes[(y - 1) * (w + 2) + x]);
-                        HalfEdge westAwayEdge = new HalfEdge(nodes[y * (w + 2) + x - 1]);
-                        nodes[y * (w + 2) + x].edges.Add(southAwayEdge);
-                        nodes[y * (w + 2) + x].edges.Add(westAwayEdge);
+                        if (y != h + 1) { // not top edge
+                            HalfEdge westAwayEdge = new HalfEdge(nodes[y * (w + 2) + x - 1]);
+                            nodes[y * (w + 2) + x].edges.Add(westAwayEdge);
+                        }
+                        if (x != w + 1) { // not right edge
+                            HalfEdge southToEdge = new HalfEdge(nodes[y * (w + 2) + x]);
+                            nodes[(y - 1) * (w + 2) + x].edges.Add(southToEdge);
+                        }
                         
-                        HalfEdge southToEdge = new HalfEdge(nodes[y * (w + 2) + x]);
                         HalfEdge westToEdge = new HalfEdge(nodes[y * (w + 2) + x ]);
-                        nodes[(y - 1) * (w + 2) + x].edges.Add(southToEdge);
                         nodes[y * (w + 2) + x - 1].edges.Add(westToEdge);
+                        HalfEdge southAwayEdge = new HalfEdge(nodes[(y - 1) * (w + 2) + x]);
+                        nodes[y * (w + 2) + x].edges.Add(southAwayEdge);
                     }
                 }
                 else {
                     //bottom edge
                     if (x != 0) {
-                        HalfEdge edge = new HalfEdge(nodes[x - 1]);
-                        nodes[x].edges.Add(edge);
+                        HalfEdge westAwayEdge = new HalfEdge(nodes[x - 1]);
+                        nodes[x].edges.Add(westAwayEdge);
                     }
                 }
             }
