@@ -221,7 +221,7 @@ Transform:
   m_GameObject: {fileID: 100347188}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -227, y: 0, z: -223}
+  m_LocalPosition: {x: 69.5, y: 0, z: 65.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -426,10 +426,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   TextUI: {fileID: 1591360334}
   playerObj: {fileID: 100347188}
-  chunkSize: 512
+  chunkSize: 100
   renderDistance: 1
   roadPartitions: {x: 1, y: 1}
-  nodeJitter: 0.06
+  nodeJitter: 0
 --- !u!4 &591882720
 Transform:
   m_ObjectHideFlags: 0

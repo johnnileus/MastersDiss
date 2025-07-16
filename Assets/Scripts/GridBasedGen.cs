@@ -171,20 +171,21 @@ public class Chunk {
     }
 
 
-    private HalfEdge FindNextEdge(HalfEdge edge){
+    private int FindNextEdgeIndex(HalfEdge edge){
         //angle between edge and x axis
         float baseAngle = WrapAngleRadian(-Mathf.Atan2(edge.from.pos.z - edge.to.pos.z, edge.from.pos.x - edge.to.pos.x ));
         Debug.Log($"pos to: {edge.to.pos}, from: {edge.from.pos}");
-        HalfEdge closestEdge = null;
+        int closestEdge = 0;
         float smallestAngle = 9999f;
 
-        foreach (var newEdge in edge.to.edges) {
+        for (int i = 0; i < edge.to.edges.Count; i++) {
+            HalfEdge newEdge = edge.to.edges[i];
             float angleFromX = WrapAngleRadian(Mathf.Atan2(newEdge.to.pos.z - newEdge.from.pos.z, newEdge.to.pos.x - newEdge.from.pos.x));
             float angleFromBase = WrapAngleRadian(angleFromX + baseAngle);
             Debug.Log($"{baseAngle}, {angleFromX}, {angleFromBase}");
             if (angleFromBase > Mathf.Epsilon && angleFromBase < smallestAngle) {
                 smallestAngle = angleFromBase;
-                closestEdge = newEdge;
+                closestEdge = i;
             }
         }
         return closestEdge;
@@ -195,24 +196,24 @@ public class Chunk {
         edgesToCheck.Add(nodes[0].edges[0]);
 
         while (edgesToCheck.Count > 0) {
+            
             HalfEdge edge = edgesToCheck[0];
             
-            HalfEdge closestEdge = FindNextEdge(edge);
-            closestEdge.DrawEdge();
-            closestEdge = FindNextEdge(closestEdge);
-            closestEdge.DrawEdge();
-            closestEdge = FindNextEdge(closestEdge);
-            closestEdge.DrawEdge();
-            closestEdge = FindNextEdge(closestEdge);
-            closestEdge.DrawEdge();
+            int closestEdgeIndex = FindNextEdgeIndex(edge);
+            for (int i = 0; i < edge.to.edges.Count; i++) {
+                Debug.Log(i);
+                if (!edge.to.edges[i].visited) {
+                    edgesToCheck.Add(edge.to.edges[i]);
+                }
+            }
+            edge.next = edge.to.edges[closestEdgeIndex];
 
-
-
-            
-            
             edge.visited = true;
             edgesToCheck.RemoveAt(0);
         }
+        
+        nodes[0].edges[0].next.DrawEdge();
+        
         
     }
     
