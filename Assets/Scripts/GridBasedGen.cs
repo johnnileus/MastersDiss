@@ -12,7 +12,11 @@ using UnityEngine.Serialization;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
+
+
+
 public class RoadNode{
+    public int ID;
     public Vector3 pos;
     public List<HalfEdge> edges = new List<HalfEdge>();
 
@@ -21,11 +25,31 @@ public class RoadNode{
     }
 }
 
+public class Face{
+    public List<RoadNode> nodes = new List<RoadNode>();
+
+    public Face(){
+        
+    }
+}
+
 public class HalfEdge{
     public RoadNode to;
+    public RoadNode from;
+    public HalfEdge next;
 
-    public HalfEdge(RoadNode target){
+    public bool visited = false;
+
+    public HalfEdge(RoadNode target, RoadNode source){
         to = target;
+        from = source;
+        next = null;
+    }
+
+    public void DrawEdge(float t = 999f){
+        Debug.DrawLine(from.pos, to.pos, Color.gray, t);
+        Debug.DrawLine(from.pos, from.pos + Vector3.up * 50f, Color.cyan, t);
+        Debug.DrawLine(to.pos, to.pos + Vector3.up * 50f, Color.red, t);
     }
 }
 
@@ -44,6 +68,7 @@ public class Chunk {
     private float size;
 
     public List<RoadNode> nodes = new List<RoadNode>();
+    public List<Face> faces = new List<Face>();
 
     public Chunk(int x, int y, float chunkSize, float jitter){
         size = chunkSize;
@@ -64,8 +89,17 @@ public class Chunk {
 
     }
 
-    public float GetChunkSeed(float x, float y){
+    private float GetChunkSeed(float x, float y){
         return x * 1619.5125f + y * 31337.65125f;
+    }
+    
+    private float WrapAngleRadian(float ang){
+        float output = ang % (2 * Mathf.PI);
+        if (output < 0f) {
+            return output + 2 * Mathf.PI;
+        }
+
+        return output;
     }
     
     public void DrawChunk() {
@@ -77,10 +111,15 @@ public class Chunk {
         foreach (var node in nodes) {
             // Debug.DrawLine(node.pos, node.pos + Vector3.up*50, col);
             foreach (var edge in node.edges) {
-                Vector3 offset = new Vector3(Random.value, 0, Random.value) * 50f;
-                Debug.DrawLine(node.pos + offset, edge.to.pos, new Color(Random.value, Random.value, Random.value));
+                Vector3 offset = new Vector3(Random.value, 0, Random.value) * size * .03f;
+                Debug.DrawLine(node.pos, edge.to.pos + offset, new Color(Random.value, Random.value, Random.value));
             }
         }
+    }
+
+    private void CreateHalfEdge(int from, int to){
+        HalfEdge edge = new HalfEdge(nodes[to], nodes[from]);
+        nodes[from].edges.Add(edge);
     }
     
     // w,h = # of inside roads
@@ -106,40 +145,84 @@ public class Chunk {
                 if (y != 0) {
                     //left edge
                     if (x == 0) {
-                        HalfEdge southToEdge = new HalfEdge(nodes[(y) * (w + 2)]);
-                        nodes[(y-1) * (w + 2)].edges.Add(southToEdge);
+                        CreateHalfEdge((y-1) * (w + 2), (y) * (w + 2));
                     }
                     
                     else {
                         if (y != h + 1) { // not top edge
-                            HalfEdge westAwayEdge = new HalfEdge(nodes[y * (w + 2) + x - 1]);
-                            nodes[y * (w + 2) + x].edges.Add(westAwayEdge);
+                            CreateHalfEdge(y * (w + 2) + x, y * (w + 2) + x - 1);
+
                         }
                         if (x != w + 1) { // not right edge
-                            HalfEdge southToEdge = new HalfEdge(nodes[y * (w + 2) + x]);
-                            nodes[(y - 1) * (w + 2) + x].edges.Add(southToEdge);
+                            CreateHalfEdge((y - 1) * (w + 2) + x, y * (w + 2) + x);
                         }
-                        
-                        HalfEdge westToEdge = new HalfEdge(nodes[y * (w + 2) + x ]);
-                        nodes[y * (w + 2) + x - 1].edges.Add(westToEdge);
-                        HalfEdge southAwayEdge = new HalfEdge(nodes[(y - 1) * (w + 2) + x]);
-                        nodes[y * (w + 2) + x].edges.Add(southAwayEdge);
+                        CreateHalfEdge(y * (w + 2) + x - 1, y * (w + 2) + x);
+                        CreateHalfEdge(y * (w + 2) + x, (y - 1) * (w + 2) + x);
                     }
                 }
                 else {
                     //bottom edge
                     if (x != 0) {
-                        HalfEdge westAwayEdge = new HalfEdge(nodes[x - 1]);
-                        nodes[x].edges.Add(westAwayEdge);
+                        CreateHalfEdge(x, x - 1);
                     }
                 }
             }
         }
     }
+
+
+    private HalfEdge FindNextEdge(HalfEdge edge){
+        //angle between edge and x axis
+        float baseAngle = WrapAngleRadian(-Mathf.Atan2(edge.from.pos.z - edge.to.pos.z, edge.from.pos.x - edge.to.pos.x ));
+        Debug.Log($"pos to: {edge.to.pos}, from: {edge.from.pos}");
+        HalfEdge closestEdge = null;
+        float smallestAngle = 9999f;
+
+        foreach (var newEdge in edge.to.edges) {
+            float angleFromX = WrapAngleRadian(Mathf.Atan2(newEdge.to.pos.z - newEdge.from.pos.z, newEdge.to.pos.x - newEdge.from.pos.x));
+            float angleFromBase = WrapAngleRadian(angleFromX + baseAngle);
+            Debug.Log($"{baseAngle}, {angleFromX}, {angleFromBase}");
+            if (angleFromBase > Mathf.Epsilon && angleFromBase < smallestAngle) {
+                smallestAngle = angleFromBase;
+                closestEdge = newEdge;
+            }
+        }
+        return closestEdge;
+    }
+    
+    public void GenerateFaces(){
+        List<HalfEdge> edgesToCheck = new List<HalfEdge>();
+        edgesToCheck.Add(nodes[0].edges[0]);
+
+        while (edgesToCheck.Count > 0) {
+            HalfEdge edge = edgesToCheck[0];
+            
+            HalfEdge closestEdge = FindNextEdge(edge);
+            closestEdge.DrawEdge();
+            closestEdge = FindNextEdge(closestEdge);
+            closestEdge.DrawEdge();
+            closestEdge = FindNextEdge(closestEdge);
+            closestEdge.DrawEdge();
+            closestEdge = FindNextEdge(closestEdge);
+            closestEdge.DrawEdge();
+
+
+
+            
+            
+            edge.visited = true;
+            edgesToCheck.RemoveAt(0);
+        }
+        
+    }
+    
 }
 
 
 public class GridBasedGen : MonoBehaviour{
+
+    [SerializeField] public GameObject TextUI;
+    private List<TMP_Text> UITexts;
 
     [SerializeField] public GameObject playerObj;
     [SerializeField] public int chunkSize;
@@ -159,34 +242,45 @@ public class GridBasedGen : MonoBehaviour{
         Chunk newChunk = new Chunk(x, y, chunkSize, nodeJitter);
 
         newChunk.GenerateRoads(roadPartitions.x, roadPartitions.y);
+        newChunk.GenerateFaces();
         
         chunks.Add((x,y), newChunk);
 
         return true;
     }
 
-    void Start() {
+
+    
+    void Start(){
+        UITexts = new List<TMP_Text>();
+        foreach (var text in TextUI.GetComponentsInChildren<TMP_Text>()) {
+            UITexts.Add(text);
+        }
     }
 
     void Update(){
         Vector3 plrPos = playerObj.transform.position;
         Vector2Int plrChunk = new Vector2Int(Mathf.FloorToInt(plrPos.x / chunkSize), Mathf.FloorToInt(plrPos.z / chunkSize));
-        
 
+        int chunksCreated = 0;
+        int chunksDeleted = 0;
         //generate chunks
         for (int y = -renderDistance; y < renderDistance; y++) {
             for (int x = -renderDistance; x < renderDistance; x++) {
                 
                 Vector2Int currentChunkCoords = new Vector2Int(plrChunk.x + x, plrChunk.y + y);
 
-                float distToPlr = Vector2.Distance(
-                    new Vector2(currentChunkCoords.x, currentChunkCoords.y),
-                    new Vector2(plrChunk.x, plrChunk.y)
+                float distToPlr = Vector3.Distance(
+                    new Vector3((currentChunkCoords.x + 0.5f) * chunkSize,0, (currentChunkCoords.y + 0.5f) * chunkSize),
+                    plrPos
                 );
                 
-                if (distToPlr <= renderDistance * chunkSize) {
+                
+                if (distToPlr < renderDistance * chunkSize) {
 
-                    CreateChunk(currentChunkCoords.x, currentChunkCoords.y);
+                    if (CreateChunk(currentChunkCoords.x, currentChunkCoords.y)) {
+                        chunksCreated++;
+                    }
                 }
             }
         }
@@ -200,11 +294,17 @@ public class GridBasedGen : MonoBehaviour{
             }
         } foreach (var key in chunksToDelete) {
             chunks.Remove(key);
+            chunksDeleted++;
         }
         
         //draw each chunk
         foreach (var chunk in chunks) {
             chunk.Value.DrawChunk();
         }
+
+        UITexts[0].text = $"Chunk Count: {chunks.Count}";
+        UITexts[1].text = $"chunksCreated: {chunksCreated}";
+        UITexts[2].text = $"chunksDeleted: {chunksDeleted}";
+        
     }
 }
