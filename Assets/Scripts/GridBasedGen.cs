@@ -13,7 +13,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Serialization;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
-
+using UnityEngine.Profiling;
 
 
 
@@ -205,7 +205,7 @@ public class Chunk {
     
     
     
-    private int FindNextEdgeIndex(HalfEdge edge){
+    private int FindNextEdgeIndexOld(HalfEdge edge){
         //angle between edge and x axis
         float baseAngle = WrapAngleRadian(-Mathf.Atan2(edge.from.pos.z - edge.to.pos.z, edge.from.pos.x - edge.to.pos.x ));
         int closestEdge = 0;
@@ -214,6 +214,23 @@ public class Chunk {
         for (int i = 0; i < edge.to.edges.Count; i++) {
             HalfEdge newEdge = edge.to.edges[i];
             float angleFromX = WrapAngleRadian(Mathf.Atan2(newEdge.to.pos.z - newEdge.from.pos.z, newEdge.to.pos.x - newEdge.from.pos.x));
+            float angleFromBase = WrapAngleRadian(angleFromX + baseAngle);
+            if (angleFromBase > Mathf.Epsilon && angleFromBase < smallestAngle) {
+                smallestAngle = angleFromBase;
+                closestEdge = i;
+            }
+        }
+        return closestEdge;
+    }
+    private int FindNextEdgeIndex(HalfEdge edge){
+
+        float baseAngle = WrapAngleRadian(Mathf.PI - edge.angleFromX);
+        int closestEdge = 0;
+        float smallestAngle = 9999f;
+
+        for (int i = 0; i < edge.to.edges.Count; i++) {
+            HalfEdge newEdge = edge.to.edges[i];
+            float angleFromX = newEdge.angleFromX;
             float angleFromBase = WrapAngleRadian(angleFromX + baseAngle);
             if (angleFromBase > Mathf.Epsilon && angleFromBase < smallestAngle) {
                 smallestAngle = angleFromBase;
@@ -263,7 +280,7 @@ public class Chunk {
                 } while (currentEdge != edge);
                 
                 faces.Add(face);
-                face.DrawFace();
+                // face.DrawFace();
             }
         }
 
@@ -295,9 +312,9 @@ public class GridBasedGen : MonoBehaviour{
         Chunk newChunk = new Chunk(x, y, chunkSize, nodeJitter, roadPartitions);
 
         newChunk.GenerateRoads(roadPartitions.x, roadPartitions.y);
-        newChunk.AssignEdgeAngles();
+        newChunk.AssignEdgeAngles();    
         newChunk.FindAllNextEdgesTraverse();
-        newChunk.GenerateFaces();
+        // newChunk.GenerateFaces();
         UITexts[2].text = $"{newChunk.edgesChecked}";
         newChunk.edgesChecked = 0;
 
@@ -369,8 +386,8 @@ public class GridBasedGen : MonoBehaviour{
 
         float startTime = Time.realtimeSinceStartup;
         for (int i = 0; i < 10; i++) {
-            // chunks.Remove((0,0));
-            // CreateChunk(0, 0);
+            chunks.Remove((0,0));
+            CreateChunk(0, 0);
         }
 
         UITexts[3].text = $"ms for chunk gen: {(Time.realtimeSinceStartup - startTime) * 1000}";
