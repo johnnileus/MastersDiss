@@ -429,7 +429,7 @@ MonoBehaviour:
   chunkSize: 100
   renderDistance: 1
   roadPartitions: {x: 4, y: 4}
-  nodeJitter: 0
+  nodeJitter: 0.05
 --- !u!4 &591882720
 Transform:
   m_ObjectHideFlags: 0

@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="64a05a0f-fd94-4589-8541-1567dc7f542e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MastersDiss/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MastersDiss/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/GridBasedGen.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/GridBasedGen.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -14,7 +15,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Assets/Scripts/ComputeRoadGen.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/d44b17e136d09081da1e8fd0e8c83fde60e11818b9f2442d7ed8cb733fae895e/System.Collections.Generic.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/GridBasedGen.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Assets/Scripts/QuadTree.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
@@ -109,7 +110,8 @@
       <workItem from="1752771090896" duration="593000" />
       <workItem from="1752912873269" duration="595000" />
       <workItem from="1753357074779" duration="1935000" />
-      <workItem from="1753434706862" duration="8873000" />
+      <workItem from="1753434706862" duration="12459000" />
+      <workItem from="1753522501662" duration="11114000" />
     </task>
     <servers />
   </component>
