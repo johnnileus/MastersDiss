@@ -428,9 +428,9 @@ MonoBehaviour:
   playerObj: {fileID: 100347188}
   chunkSize: 100
   drawChunks: 0
-  renderDistance: 1
+  renderDistance: 8
   roadPartitions: {x: 4, y: 4}
-  nodeJitter: 0.05
+  nodeJitter: 0.15
 --- !u!4 &591882720
 Transform:
   m_ObjectHideFlags: 0

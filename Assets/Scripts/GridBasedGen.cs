@@ -33,7 +33,7 @@ public class GridBasedGen : MonoBehaviour{
     
     
     //creates a new empty chunk, return true if succeeds. exists => false
-    public bool CreateChunk(int x, int y) {
+    private bool CreateChunk(int x, int y) {
         
         if (chunks.ContainsKey((x,y))) {
             return false;
@@ -45,11 +45,13 @@ public class GridBasedGen : MonoBehaviour{
         newChunk.AssignEdgeAngles();    
         newChunk.AssignAllNextEdges();
         newChunk.GenerateBlocks();
-        newChunk.DrawAllBlocks();
+        // newChunk.DrawAllBlocks();
         
         List<GameObject> meshObjects = newChunk.GenerateStructures();
+        GameObject parent = new GameObject($"{x}, {y}");
+        parent.transform.SetParent(this.transform);
         foreach (var meshObject in meshObjects) {
-            meshObject.transform.SetParent(this.transform);
+            meshObject.transform.SetParent(parent.transform);
         }
         
         // newChunk.DrawAllNextPointers();
