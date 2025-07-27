@@ -47,6 +47,11 @@ public class GridBasedGen : MonoBehaviour{
         newChunk.GenerateBlocks();
         newChunk.DrawAllBlocks();
         
+        List<GameObject> meshObjects = newChunk.GenerateStructures();
+        foreach (var meshObject in meshObjects) {
+            meshObject.transform.SetParent(this.transform);
+        }
+        
         // newChunk.DrawAllNextPointers();
         UITexts[2].text = $"{newChunk.edgesChecked}";
         newChunk.edgesChecked = 0;
@@ -115,7 +120,7 @@ public class GridBasedGen : MonoBehaviour{
 
 
         UITexts[0].text = $"Chunk Count: {chunks.Count}";
-        UITexts[1].text = $"faces: {chunks[(0,0)].blocks.Count}";
+        UITexts[1].text = $"";
 
         float startTime = Time.realtimeSinceStartup;
         // for (int i = 0; i < 10; i++) {

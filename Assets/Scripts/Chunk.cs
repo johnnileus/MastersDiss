@@ -258,8 +258,6 @@ public class Chunk {
                 } while (currentEdge != edge && !currentEdge.faceVisited);
                 
                 faces.Add(face);
-                
-
             }
         }
 
@@ -271,6 +269,15 @@ public class Chunk {
 
     }
 
+    public List<GameObject> GenerateStructures(){
+        List<GameObject> meshObjects = new List<GameObject>();
+        foreach (var block in blocks) {
+            meshObjects.Add(block.GenerateStructure());
+        }
+
+        return meshObjects;
+    }
+    
     public void DrawAllNextPointers(){
         foreach (var node in nodes) {
             foreach (var edge in node.edges) {

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 public class Block{
     public Face originalFace;
-    
-    
+
+    public Mesh structureMesh = new Mesh();
     public List<Vector3> insetPoints = new List<Vector3>();
 
     public Block(Face face){
@@ -25,6 +25,26 @@ public class Block{
         }
 
     }
+    
+    public GameObject GenerateStructure(){
+        GameObject meshObject = new GameObject();
+        meshObject.AddComponent<MeshFilter>();
+        meshObject.AddComponent<MeshRenderer>();
+        MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
+        Mesh mesh = new Mesh();
+        meshFilter.mesh = mesh;
+
+        mesh.vertices = insetPoints.ToArray();
+        mesh.triangles = new int[] {
+            0, 1, 2,
+            0, 2, 3
+        };
+        
+        mesh.RecalculateNormals();
+        meshObject.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Standard"));
+        return meshObject;
+    }
+    
 
     public void DrawInset(){
         for (int i = 0; i < insetPoints.Count - 1; i++) {
