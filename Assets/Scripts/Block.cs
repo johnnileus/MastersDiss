@@ -3,11 +3,10 @@ using UnityEngine;
 using System.Collections.Generic;
 
 public class Block{
-    private Face originalFace;
-    public List<Vector3> insetPoints = new List<Vector3>();
-
+    public Face originalFace;
     
-
+    
+    public List<Vector3> insetPoints = new List<Vector3>();
 
     public Block(Face face){
         originalFace = face;
@@ -27,8 +26,7 @@ public class Block{
 
     }
 
-    public void Draw(){
-        originalFace.Draw();
+    public void DrawInset(){
         for (int i = 0; i < insetPoints.Count - 1; i++) {
             Debug.DrawLine(insetPoints[i], insetPoints[i+1], Color.green, 99f);
         }

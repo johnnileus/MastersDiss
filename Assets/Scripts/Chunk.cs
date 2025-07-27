@@ -70,7 +70,7 @@ public class Chunk {
     private float size;
 
     public List<RoadNode> nodes = new List<RoadNode>();
-    public List<Face> faces = new List<Face>();
+    public List<Block> blocks = new List<Block>();
 
     public int edgesChecked = 0;
     
@@ -236,8 +236,9 @@ public class Chunk {
         }
         
     }
-    //fix for when edge crashes
-    public void GenerateFaces(){
+    //fix edge crashing situation claiming edges
+    public void GenerateBlocks(){
+        List<Face> faces = new List<Face>();
         foreach (var node in nodes) {
             foreach (var edge in node.edges) {
                 if (edge.faceVisited) {
@@ -262,6 +263,12 @@ public class Chunk {
             }
         }
 
+        foreach (var face in faces) {
+            Block block = new Block(face);
+            block.GenerateInset();
+            blocks.Add(block);
+        }
+
     }
 
     public void DrawAllNextPointers(){
@@ -272,9 +279,10 @@ public class Chunk {
         }
     }
     
-    public void DrawAllFaces(){
-        foreach (var face in faces) {
-            face.Draw();
+    public void DrawAllBlocks(){
+        foreach (var block in blocks) {
+            block.DrawInset();
+            block.originalFace.Draw();
         }
     }
 }

@@ -44,11 +44,8 @@ public class GridBasedGen : MonoBehaviour{
         newChunk.GenerateRoads(roadPartitions.x, roadPartitions.y);
         newChunk.AssignEdgeAngles();    
         newChunk.AssignAllNextEdges();
-        newChunk.GenerateFaces();
-
-        Block block = new Block(newChunk.faces[0]);
-        block.GenerateInset();
-        block.Draw();
+        newChunk.GenerateBlocks();
+        newChunk.DrawAllBlocks();
         
         // newChunk.DrawAllNextPointers();
         UITexts[2].text = $"{newChunk.edgesChecked}";
@@ -118,13 +115,13 @@ public class GridBasedGen : MonoBehaviour{
 
 
         UITexts[0].text = $"Chunk Count: {chunks.Count}";
-        UITexts[1].text = $"faces: {chunks[(0,0)].faces.Count}";
+        UITexts[1].text = $"faces: {chunks[(0,0)].blocks.Count}";
 
         float startTime = Time.realtimeSinceStartup;
-        for (int i = 0; i < 10; i++) {
-            chunks.Remove((0,0));
-            CreateChunk(0, 0);
-        }
+        // for (int i = 0; i < 10; i++) {
+        //     chunks.Remove((0,0));
+        //     CreateChunk(0, 0);
+        // }
 
         UITexts[3].text = $"ms for chunk gen: {(Time.realtimeSinceStartup - startTime) * 1000}";
 
