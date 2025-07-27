@@ -427,6 +427,7 @@ MonoBehaviour:
   TextUI: {fileID: 1591360334}
   playerObj: {fileID: 100347188}
   chunkSize: 100
+  drawChunks: 1
   renderDistance: 1
   roadPartitions: {x: 4, y: 4}
   nodeJitter: 0.05

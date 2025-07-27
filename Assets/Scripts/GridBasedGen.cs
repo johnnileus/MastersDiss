@@ -213,9 +213,14 @@ public class Chunk {
         float smallestAngle = 9999f;
 
         for (int i = 0; i < edge.to.edges.Count; i++) {
+            
+            
             HalfEdge newEdge = edge.to.edges[i];
+            if (edge.from == newEdge.to) continue;
+
             float angleFromX = newEdge.angleFromX;
             float angleFromBase = WrapAngleRadian(angleFromX + baseAngle);
+            
             if (angleFromBase > Mathf.Epsilon && angleFromBase < smallestAngle) {
                 smallestAngle = angleFromBase;
                 closestEdge = i;
@@ -248,13 +253,8 @@ public class Chunk {
         }
         
     }
-
+    //fix for when edge crashes
     public void GenerateFaces(){
-        
-        
-        
-        
-        bool a = false;
         foreach (var node in nodes) {
             foreach (var edge in node.edges) {
                 if (edge.faceVisited) {
@@ -263,7 +263,6 @@ public class Chunk {
         
                 Face face = new Face();
                 HalfEdge currentEdge = edge;
-                int count = 0;
                 do {
                     if (currentEdge.faceVisited) {
                         break;
@@ -272,14 +271,11 @@ public class Chunk {
                     face.nodes.Add(currentEdge.from);
                     currentEdge.faceVisited = true;
                     currentEdge = currentEdge.next;
-                    count++;
-                } while (currentEdge != edge && count < 100 && !currentEdge.faceVisited);
+                } while (currentEdge != edge && !currentEdge.faceVisited);
                 
                 faces.Add(face);
                 
-                if (face.nodes.Count > 4 && !a) {
-                    a = true;
-                }
+
             }
         }
 
@@ -298,7 +294,6 @@ public class Chunk {
             Color col = new Color(Random.value, Random.value, Random.value);
             Vector3 offset = new Vector3(0, Random.value * 15f, 0);
             foreach (var edge in face.edges) {
-                Debug.Log("a");
                 Debug.DrawLine(edge.from.pos + offset, edge.to.pos + offset, col, 999f);
             }
         }
@@ -333,28 +328,13 @@ public class GridBasedGen : MonoBehaviour{
         newChunk.AssignEdgeAngles();    
         newChunk.AssignAllNextEdges();
         newChunk.GenerateFaces();
-        newChunk.DrawAllNextPointers();
+        // newChunk.DrawAllNextPointers();
         UITexts[2].text = $"{newChunk.edgesChecked}";
         newChunk.edgesChecked = 0;
 
         
         chunks.Add((x,y), newChunk);
 
-        foreach (var node in newChunk.nodes) {
-            foreach (var edge in node.edges) {
-            }
-        }
-        // Debug.Log($"{newChunk.nodes[0].edges[0].angleFromX} {newChunk.nodes[0].edges[0].next.angleFromX} {newChunk.nodes[0].edges[0].next.next.angleFromX}");
-
-        newChunk.nodes[0].edges[0].next.next.to.edges[1].next.DrawEdge();
-        HalfEdge temnpedge = newChunk.nodes[0].edges[0].next.next.to.edges[1];
-        float baseAngle = -Mathf.Atan2(temnpedge.from.pos.z - temnpedge.to.pos.z, temnpedge.from.pos.x - temnpedge.to.pos.x);
-        Debug.Log($"base angle: {baseAngle}");
-        foreach (var newedge in newChunk.nodes[0].edges[0].next.next.to.edges[1].to.edges) {
-            Debug.Log(newedge.angleFromX);
-        }
-
-        
         return true;
     }
 
@@ -419,10 +399,10 @@ public class GridBasedGen : MonoBehaviour{
         UITexts[1].text = $"faces: {chunks[(0,0)].faces.Count}";
 
         float startTime = Time.realtimeSinceStartup;
-        // for (int i = 0; i < 1; i++) {
-        //     chunks.Remove((0,0));
-        //     CreateChunk(0, 0);
-        // }
+        for (int i = 0; i < 10; i++) {
+            chunks.Remove((0,0));
+            CreateChunk(0, 0);
+        }
 
         UITexts[3].text = $"ms for chunk gen: {(Time.realtimeSinceStartup - startTime) * 1000}";
 
