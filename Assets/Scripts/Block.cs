@@ -1,6 +1,7 @@
 using UnityEngine;
 
 using System.Collections.Generic;
+using System.Linq;
 
 public class Block{
     public Face originalFace;
@@ -26,41 +27,17 @@ public class Block{
 
     }
     
-    public GameObject GenerateStructure(){
+    public GameObject GenerateStructure(Material blockMaterial){
         float height = (Random.value + 1f) * 30f; 
         GameObject meshObject = new GameObject();
         meshObject.AddComponent<MeshFilter>();
         meshObject.AddComponent<MeshRenderer>();
         MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
-        Mesh mesh = new Mesh();
-        meshFilter.mesh = mesh;
-        List<Vector3> meshPoints = new List<Vector3>();
 
+        meshFilter.mesh = PolygonUtility.GeneratePrismMesh(insetPoints, height);
 
-        foreach (var point in insetPoints) {
-            meshPoints.Add(point);
-        }
-        foreach (var point in insetPoints) {
-            meshPoints.Add(point + Vector3.up*height);
-        }
         
-        
-        mesh.vertices = meshPoints.ToArray();
-        mesh.triangles = new int[] {
-            0,1,5,
-            0,5,4,
-            1,2,6,
-            1,6,5,
-            2,3,7,
-            2,7,6,
-            3,0,4,
-            3,4,7,
-            4,5,6,
-            4,6,7
-        };
-        
-        mesh.RecalculateNormals();
-        meshObject.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Standard"));
+        meshObject.GetComponent<MeshRenderer>().material = blockMaterial;
         return meshObject;
     }
     

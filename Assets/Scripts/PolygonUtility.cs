@@ -1,9 +1,59 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public static class PolygonUtility{
 
 
+    public static Mesh GeneratePrismMesh(List<Vector3> points, float height)
+    {
+        var mesh = new Mesh { name = "Prism Mesh" };
+        int pointCount = points.Count;
+
+
+
+        var vertices = new List<Vector3>();
+        var triangles = new List<int>();
+
+        for (int i = 0; i < pointCount; i++)
+        {
+            Vector3 p0 = points[i];
+            Vector3 p1 = points[(i + 1) % pointCount];
+            Vector3 p2 = p1 + Vector3.up * height;
+            Vector3 p3 = p0 + Vector3.up * height;
+
+            int baseIndex = vertices.Count;
+            vertices.AddRange(new[] { p0, p1, p2, p3 });
+
+            triangles.Add(baseIndex);
+            triangles.Add(baseIndex + 1);
+            triangles.Add(baseIndex + 2);
+
+            triangles.Add(baseIndex);
+            triangles.Add(baseIndex + 2);
+            triangles.Add(baseIndex + 3);
+        }
+
+        int topStartIndex = vertices.Count;
+        for (int i = 0; i < pointCount; i++)
+        {
+            vertices.Add(points[i] + Vector3.up * height);
+        }
+        for (int i = 1; i < pointCount - 1; i++)
+        {
+            triangles.Add(topStartIndex);
+            triangles.Add(topStartIndex + i);
+            triangles.Add(topStartIndex + i + 1);
+        }
+        
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0);
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+
+        return mesh;
+    }
+    
     public static List<Vector2> InsetPolygon(List<Vector2> polygon, float insetDistance){
         int corners = polygon.Count;
         if (corners < 3) {

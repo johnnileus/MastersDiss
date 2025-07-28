@@ -269,10 +269,10 @@ public class Chunk {
 
     }
 
-    public List<GameObject> GenerateStructures(){
+    public List<GameObject> GenerateStructures(Material blockMaterial){
         List<GameObject> meshObjects = new List<GameObject>();
         foreach (var block in blocks) {
-            meshObjects.Add(block.GenerateStructure());
+            meshObjects.Add(block.GenerateStructure(blockMaterial));
         }
 
         return meshObjects;

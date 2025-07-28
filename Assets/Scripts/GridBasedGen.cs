@@ -22,6 +22,8 @@ public class GridBasedGen : MonoBehaviour{
 
     [SerializeField] public GameObject TextUI;
     private List<TMP_Text> UITexts;
+    
+    [SerializeField] public Material blockMaterial;
 
     [SerializeField] public GameObject playerObj;
     [SerializeField] public int chunkSize;
@@ -47,7 +49,7 @@ public class GridBasedGen : MonoBehaviour{
         newChunk.GenerateBlocks();
         // newChunk.DrawAllBlocks();
         
-        List<GameObject> meshObjects = newChunk.GenerateStructures();
+        List<GameObject> meshObjects = newChunk.GenerateStructures(blockMaterial);
         GameObject parent = new GameObject($"{x}, {y}");
         parent.transform.SetParent(this.transform);
         foreach (var meshObject in meshObjects) {
