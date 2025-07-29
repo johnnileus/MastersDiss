@@ -1,9 +1,6 @@
 using System.Collections.Generic;
-using System.Numerics;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Serialization;
-using UnityEngine.TerrainUtils;
+using Debug = UnityEngine.Debug;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
@@ -23,26 +20,107 @@ public class Chunk{
         _center = _pos + new Vector2(w / 2f, w / 2f);
         _coords = new Vector2Int(x, y);
         _gap = gap;
-
     }
 
-    public void GenerateVoronoi(float gap){
+    public void GenerateVoronoi(){
         _voronoiCenter = GenerateVoronoiCenter(_coords.x, _coords.y);
+
+        List<Vector2> neighbours = new List<Vector2>();
+        for (int y = -1; y < 2; y++) {
+            for (int x = -1; x < 2; x++) {
+                if (y == 0 && x == 0) continue;
+                neighbours.Add(GenerateVoronoiCenter(_coords.x + x, _coords.y + y));
+            }
+        }
+
+        float boundSize = 1000f;
+    
+        List<Vector2> bounds = new List<Vector2> {
+            new (_voronoiCenter.x - boundSize, _voronoiCenter.y - boundSize), // Bottom-Left
+            new (_voronoiCenter.x + boundSize, _voronoiCenter.y - boundSize), // Bottom-Right
+            new (_voronoiCenter.x + boundSize, _voronoiCenter.y + boundSize), // Top-Right
+            new (_voronoiCenter.x - boundSize, _voronoiCenter.y + boundSize)  // Top-Left
+        };
+
+        List<Vector2> voronoiPolygonPoints = CalculateVoronoiCell(_voronoiCenter, neighbours, bounds);
+
+    
+        for (int i = 0; i < voronoiPolygonPoints.Count - 1; i++) {
+            Vector3 from = new Vector3(voronoiPolygonPoints[i].x, 0, voronoiPolygonPoints[i].y);
+            Vector3 to = new Vector3(voronoiPolygonPoints[i+1].x, 0, voronoiPolygonPoints[i+1].y);
+            Debug.DrawLine(from, to, Color.red, 99f);
+            Debug.Log(voronoiPolygonPoints[i]);
+        }
+        
+    }
+
+    private List<Vector2> CalculateVoronoiCell(Vector2 centerPoint, List<Vector2> neighborPoints, List<Vector2> bounds){
+        List<Vector2> subjectPolygon = new List<Vector2>(bounds);
+
+        foreach (var neighbor in neighborPoints) {
+            Vector2 midPoint = (centerPoint + neighbor) / 2f;
+            Vector2 normal = (centerPoint - neighbor).normalized;
+
+            List<Vector2> clippedPolygon = new List<Vector2>();
+            if (subjectPolygon.Count == 0) continue;
+
+            Vector2 s = subjectPolygon[^1];
+
+            foreach (var e in subjectPolygon) {
+                bool sIsInside = IsInside(s, midPoint, normal);
+                bool eIsInside = IsInside(e, midPoint, normal);
+
+                if (eIsInside) {
+                    if (!sIsInside) {
+                        clippedPolygon.Add(GetIntersection(s, e, midPoint, normal));
+                    }
+                    clippedPolygon.Add(e);
+                }
+                else if (sIsInside) {
+                    clippedPolygon.Add(GetIntersection(s, e, midPoint, normal));
+                }
+                s = e;
+            }
+
+            subjectPolygon = clippedPolygon;
+        }
+        return subjectPolygon;
+    }
+
+    private bool IsInside(Vector2 p, Vector2 linePoint, Vector2 normal){
+        return Vector2.Dot(p - linePoint, normal) >= 0;
+    }
+
+    private Vector2 GetIntersection(Vector2 p1, Vector2 p2, Vector2 linePoint, Vector2 normal){
+        Vector2 lineVec = p2 - p1;
+        float dotNumerator = Vector2.Dot(linePoint - p1, normal);
+        float dotDenominator = Vector2.Dot(lineVec, normal);
+
+        if (Mathf.Approximately(dotDenominator, 0f)) {
+            return p1;
+        }
+
+        float t = dotNumerator / dotDenominator;
+        return p1 + lineVec * t;
     }
     
     private Vector2 GenerateVoronoiCenter(int x, int y){
         Vector2 chunkCenter = new Vector2(x * _width, y * _width) + new Vector2(_width / 2f, _width / 2f);
 
         float noiseScale = 159.23f;
-        float noiseX = Mathf.PerlinNoise(x * noiseScale, y * noiseScale);
+        float noiseX = Mathf.PerlinNoise(x * noiseScale, y * noiseScale); 
         float noiseY = Mathf.PerlinNoise(x * noiseScale + 1000f, y * noiseScale + 1000f);
 
-        Vector2 offset = new Vector2(noiseX * 2 - 1, noiseY * 2 - 1); //-1 to 1
-        offset *= (_width - _gap) / _width;
+        noiseX = noiseX * 491051.4194f % 1;
+        noiseY = noiseY * 950925.95285f % 1;
 
-        
-        Vector2 newCenter = offset * _width/2 + chunkCenter;
-        return newCenter;
+        Vector2 randomDirection = new Vector2(noiseX * 2 - 1, noiseY * 2 - 1);
+        float maxOffset = Mathf.Max(0f, (_width / 2f) - _gap);
+
+        Vector2 finalOffset = randomDirection * maxOffset;
+        Vector2 newPoint = chunkCenter + finalOffset;
+    
+        return newPoint;
     }
     
     public void Draw(){
@@ -60,12 +138,7 @@ public class Chunk{
         Vector3 voronoiCenter = new Vector3(_voronoiCenter.x, 0, _voronoiCenter.y);
         Debug.DrawLine(voronoiCenter, voronoiCenter + Vector3.up * _width/2, Color.red);
 
-        for (int y = -1; y < 2; y++) {
-            for (int x = -1; x < 2; x++) {
-                Vector2 newVoronoi = GenerateVoronoiCenter(_coords.x + x, _coords.y + y);
-                Debug.DrawLine(voronoiCenter, new Vector3(newVoronoi.x, 0, newVoronoi.y), Color.red);
-            }
-        }
+
 
     }
 }
@@ -79,7 +152,7 @@ public class VoronoiGen : MonoBehaviour{
 
     void CreateChunk(int x, int y){
         Chunk newChunk = new Chunk(x, y, chunkWidth, edgeGap);
-        newChunk.GenerateVoronoi(edgeGap);
+        newChunk.GenerateVoronoi();
         chunks.Add(newChunk);
     }
     
