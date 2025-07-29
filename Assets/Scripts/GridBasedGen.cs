@@ -1,19 +1,8 @@
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Data;
-using System.Diagnostics;
-using System.Net;
+
 using UnityEngine;
 using TMPro;
-using Unity.Mathematics;
-using Unity.Mathematics.Geometry;
-using Unity.VisualScripting;
-using Unity.VisualScripting.FullSerializer;
-using UnityEngine.Rendering;
-using UnityEngine.Serialization;
-using Debug = UnityEngine.Debug;
-using Random = UnityEngine.Random;
-using UnityEngine.Profiling;
+
 
 
 
@@ -32,7 +21,7 @@ public class GridBasedGen : MonoBehaviour{
     [SerializeField] public int renderDistance;
     [SerializeField] public Vector2Int roadPartitions;
     [SerializeField] public float nodeJitter;
-    public Dictionary<(int x, int y), Chunk> chunks = new Dictionary<(int x, int y), Chunk>();
+    public Dictionary<(int x, int y), SquareChunk> chunks = new Dictionary<(int x, int y), SquareChunk>();
     
     
     //creates a new empty chunk, return true if succeeds. exists => false
@@ -42,7 +31,7 @@ public class GridBasedGen : MonoBehaviour{
             return false;
         }
 
-        Chunk newChunk = new Chunk(x, y, chunkSize, nodeJitter, roadPartitions);
+        SquareChunk newChunk = new SquareChunk(x, y, chunkSize, nodeJitter, roadPartitions);
 
         newChunk.GenerateRoads(roadPartitions.x, roadPartitions.y);
         newChunk.AssignEdgeAngles();    

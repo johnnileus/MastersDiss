@@ -54,7 +54,7 @@ public class HalfEdge{
     }
 }
 
-public class Chunk {
+public class SquareChunk {
 
 
     public Vector2 chunkID;
@@ -74,7 +74,7 @@ public class Chunk {
 
     public int edgesChecked = 0;
     
-    public Chunk(int x, int y, float chunkSize, float jitter, Vector2Int roadPart){
+    public SquareChunk(int x, int y, float chunkSize, float jitter, Vector2Int roadPart){
         size = chunkSize;
         nodeJitter = chunkSize * jitter; // convert 0 -> 1 to 0 -> distance to chunkSize;
         chunkID = new Vector2(x, y);
@@ -217,7 +217,7 @@ public class Chunk {
 
         int count = 0;
         
-        while (edgesToCheck.Count > 0 && count < 10000) {
+        while (edgesToCheck.Count > 0) {
             
             HalfEdge edge = edgesToCheck[0];
             
@@ -236,6 +236,7 @@ public class Chunk {
         }
         
     }
+    
     //fix edge crashing situation claiming edges
     public void GenerateBlocks(){
         List<Face> faces = new List<Face>();

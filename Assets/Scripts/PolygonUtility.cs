@@ -64,7 +64,6 @@ public static class PolygonUtility{
         for (int i = 0; i < pointCount; i++) {
             vertices.Add(original[i]);
             vertices.Add(inset[i]);
-            Debug.Log($"{pointCount} {original.Count} {inset.Count}, {2*i} {2*(i+1)}, {2*(i+1)+1}");
             if (i == pointCount - 1) {
                 triangles.AddRange(new[] {2*i, 0, 1});
                 triangles.AddRange(new[] {2*i, 1, 2*i + 1});
@@ -75,7 +74,6 @@ public static class PolygonUtility{
             }
             
         }
-        Debug.Log($"{vertices.Count}");
         mesh.SetVertices(vertices);
         mesh.SetTriangles(triangles, 0);
         mesh.RecalculateNormals();

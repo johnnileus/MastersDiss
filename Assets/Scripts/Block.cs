@@ -33,7 +33,7 @@ public class Block{
         meshObject.AddComponent<MeshRenderer>();
         MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
 
-        float height = (Random.value + 1f) * 30f; 
+        float height = (Random.value + 1f) * 3f; 
         
         meshFilter.mesh = PolygonUtility.GeneratePrismMesh(insetPoints, height);
         meshObject.GetComponent<MeshRenderer>().material = blockMaterial;
