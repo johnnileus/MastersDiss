@@ -6,11 +6,14 @@
   <component name="ChangeListManager">
     <list default="true" id="64a05a0f-fd94-4589-8541-1567dc7f542e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.MastersDiss/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.MastersDiss/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/SampleScene.unity" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Block.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Block.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/Chunk.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/Chunk.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/GridBasedGen.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/GridBasedGen.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assets/Scripts/PolygonUtility.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scripts/PolygonUtility.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ProjectSettings/URPProjectSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/ProjectSettings/URPProjectSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Shaders.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Shaders/blockMaterial.mat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Shaders/blockMaterial.mat.meta" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -120,6 +123,7 @@
       <workItem from="1753522501662" duration="11451000" />
       <workItem from="1753607138438" duration="13605000" />
       <workItem from="1753705787252" duration="3343000" />
+      <workItem from="1753795626746" duration="316000" />
     </task>
     <servers />
   </component>

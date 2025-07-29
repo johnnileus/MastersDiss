@@ -7,13 +7,13 @@ public static class PolygonUtility{
 
     public static Mesh GeneratePrismMesh(List<Vector3> points, float height)
     {
-        var mesh = new Mesh { name = "Prism Mesh" };
+        Mesh mesh = new Mesh();
         int pointCount = points.Count;
 
 
 
-        var vertices = new List<Vector3>();
-        var triangles = new List<int>();
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> triangles = new List<int>();
 
         for (int i = 0; i < pointCount; i++)
         {
@@ -51,6 +51,36 @@ public static class PolygonUtility{
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
 
+        return mesh;
+    }
+
+    public static Mesh GenerateRoad(List<Vector3> original, List<Vector3> inset){
+        Mesh mesh = new Mesh();
+        int pointCount = original.Count;
+
+        List<Vector3> vertices = new List<Vector3>();
+        List<int> triangles = new List<int>();
+
+        for (int i = 0; i < pointCount; i++) {
+            vertices.Add(original[i]);
+            vertices.Add(inset[i]);
+            Debug.Log($"{pointCount} {original.Count} {inset.Count}, {2*i} {2*(i+1)}, {2*(i+1)+1}");
+            if (i == pointCount - 1) {
+                triangles.AddRange(new[] {2*i, 0, 1});
+                triangles.AddRange(new[] {2*i, 1, 2*i + 1});
+            }
+            else {
+                triangles.AddRange(new[] {2*i, 2*(i+1), 2*(i+1)+1});
+                triangles.AddRange(new[] {2*i, 2*(i+1)+1, 2*i+1});
+            }
+            
+        }
+        Debug.Log($"{vertices.Count}");
+        mesh.SetVertices(vertices);
+        mesh.SetTriangles(triangles, 0);
+        mesh.RecalculateNormals();
+        mesh.RecalculateBounds();
+        
         return mesh;
     }
     

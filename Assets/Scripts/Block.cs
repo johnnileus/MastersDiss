@@ -27,17 +27,34 @@ public class Block{
 
     }
     
-    public GameObject GenerateStructure(Material blockMaterial){
-        float height = (Random.value + 1f) * 30f; 
+    public GameObject GenerateBlock(Material blockMaterial){
         GameObject meshObject = new GameObject();
         meshObject.AddComponent<MeshFilter>();
         meshObject.AddComponent<MeshRenderer>();
         MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
 
-        meshFilter.mesh = PolygonUtility.GeneratePrismMesh(insetPoints, height);
-
+        float height = (Random.value + 1f) * 30f; 
         
+        meshFilter.mesh = PolygonUtility.GeneratePrismMesh(insetPoints, height);
         meshObject.GetComponent<MeshRenderer>().material = blockMaterial;
+        
+        return meshObject;
+    }
+
+    public GameObject GenerateRoad(Material roadMaterial){
+        GameObject meshObject = new GameObject();
+        meshObject.AddComponent<MeshFilter>();
+        meshObject.AddComponent<MeshRenderer>();
+        MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
+        
+        List<Vector3> originalPoints = new List<Vector3>();
+        foreach (var node in originalFace.nodes) {
+            originalPoints.Add(node.pos);
+        }
+
+        meshFilter.mesh = PolygonUtility.GenerateRoad(originalPoints, insetPoints);
+        meshObject.GetComponent<MeshRenderer>().material = roadMaterial;
+
         return meshObject;
     }
     
