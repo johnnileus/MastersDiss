@@ -3,6 +3,9 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
+using TriangleNet;
+using TriangleNet.Geometry;
+using TriangleNet.Meshing.Algorithm;
 
 public class Chunk{
     private Vector2 _pos; //bottom left corner
@@ -100,6 +103,10 @@ public class Chunk{
     
         return newPoint;
     }
+
+    public void GenerateBlocks(){
+
+    }
     
     public void Draw(){
         // Vector3 pos = new Vector3(_pos.x, 0, _pos.y);
@@ -135,6 +142,8 @@ public class VoronoiGen : MonoBehaviour{
     void CreateChunk(int x, int y){
         Chunk newChunk = new Chunk(x, y, chunkWidth, edgeGap);
         newChunk.GenerateVoronoi();
+        newChunk.GenerateBlocks();
+        
         chunks.Add(newChunk);
     }
     
