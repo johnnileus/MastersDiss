@@ -157,6 +157,24 @@ public static class PolygonUtility{
         intersection = new Vector2(p1.x + t * bx, p1.y + t * by);
         return true;
     }
+    
+    public static bool IsInside(Vector2 p, Vector2 linePoint, Vector2 normal){
+        return Vector2.Dot(p - linePoint, normal) >= 0;
+    }
+
+    public static Vector2 GetIntersection(Vector2 p1, Vector2 p2, Vector2 linePoint, Vector2 normal){
+        Vector2 lineVec = p2 - p1;
+        float dotNumerator = Vector2.Dot(linePoint - p1, normal);
+        float dotDenominator = Vector2.Dot(lineVec, normal);
+
+        if (Mathf.Approximately(dotDenominator, 0f)) {
+            return p1;
+        }
+
+        float t = dotNumerator / dotDenominator;
+        return p1 + lineVec * t;
+    }
+    
 }
     
     

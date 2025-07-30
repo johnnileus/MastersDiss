@@ -13,6 +13,7 @@ public class Chunk{
 
 
     private Vector2 _voronoiCenter;
+    private List<Vector2> _voronoiPoints;
     
     public Chunk(int x, int y, float w, float gap){
         _width = w;
@@ -33,25 +34,16 @@ public class Chunk{
             }
         }
 
-        float boundSize = 1000f;
+        float boundSize = _width;
     
         List<Vector2> bounds = new List<Vector2> {
-            new (_voronoiCenter.x - boundSize, _voronoiCenter.y - boundSize), // Bottom-Left
-            new (_voronoiCenter.x + boundSize, _voronoiCenter.y - boundSize), // Bottom-Right
-            new (_voronoiCenter.x + boundSize, _voronoiCenter.y + boundSize), // Top-Right
-            new (_voronoiCenter.x - boundSize, _voronoiCenter.y + boundSize)  // Top-Left
+            new (_voronoiCenter.x - boundSize, _voronoiCenter.y - boundSize), 
+            new (_voronoiCenter.x + boundSize, _voronoiCenter.y - boundSize), 
+            new (_voronoiCenter.x + boundSize, _voronoiCenter.y + boundSize),
+            new (_voronoiCenter.x - boundSize, _voronoiCenter.y + boundSize)
         };
 
-        List<Vector2> voronoiPolygonPoints = CalculateVoronoiCell(_voronoiCenter, neighbours, bounds);
-
-    
-        for (int i = 0; i < voronoiPolygonPoints.Count - 1; i++) {
-            Vector3 from = new Vector3(voronoiPolygonPoints[i].x, 0, voronoiPolygonPoints[i].y);
-            Vector3 to = new Vector3(voronoiPolygonPoints[i+1].x, 0, voronoiPolygonPoints[i+1].y);
-            Debug.DrawLine(from, to, Color.red, 99f);
-            Debug.Log(voronoiPolygonPoints[i]);
-        }
-        
+        _voronoiPoints = CalculateVoronoiCell(_voronoiCenter, neighbours, bounds);
     }
 
     private List<Vector2> CalculateVoronoiCell(Vector2 centerPoint, List<Vector2> neighborPoints, List<Vector2> bounds){
@@ -64,22 +56,23 @@ public class Chunk{
             List<Vector2> clippedPolygon = new List<Vector2>();
             if (subjectPolygon.Count == 0) continue;
 
-            Vector2 s = subjectPolygon[^1];
+            Vector2 start = subjectPolygon[^1];
 
-            foreach (var e in subjectPolygon) {
-                bool sIsInside = IsInside(s, midPoint, normal);
-                bool eIsInside = IsInside(e, midPoint, normal);
+            //clip
+            foreach (var end in subjectPolygon) {
+                bool startIsInside = PolygonUtility.IsInside(start, midPoint, normal);
+                bool endIsInside = PolygonUtility.IsInside(end, midPoint, normal);
 
-                if (eIsInside) {
-                    if (!sIsInside) {
-                        clippedPolygon.Add(GetIntersection(s, e, midPoint, normal));
+                if (endIsInside) {
+                    if (!startIsInside) {
+                        clippedPolygon.Add(PolygonUtility.GetIntersection(start, end, midPoint, normal));
                     }
-                    clippedPolygon.Add(e);
+                    clippedPolygon.Add(end);
                 }
-                else if (sIsInside) {
-                    clippedPolygon.Add(GetIntersection(s, e, midPoint, normal));
+                else if (startIsInside) {
+                    clippedPolygon.Add( PolygonUtility.GetIntersection(start, end, midPoint, normal));
                 }
-                s = e;
+                start = end;
             }
 
             subjectPolygon = clippedPolygon;
@@ -87,22 +80,7 @@ public class Chunk{
         return subjectPolygon;
     }
 
-    private bool IsInside(Vector2 p, Vector2 linePoint, Vector2 normal){
-        return Vector2.Dot(p - linePoint, normal) >= 0;
-    }
 
-    private Vector2 GetIntersection(Vector2 p1, Vector2 p2, Vector2 linePoint, Vector2 normal){
-        Vector2 lineVec = p2 - p1;
-        float dotNumerator = Vector2.Dot(linePoint - p1, normal);
-        float dotDenominator = Vector2.Dot(lineVec, normal);
-
-        if (Mathf.Approximately(dotDenominator, 0f)) {
-            return p1;
-        }
-
-        float t = dotNumerator / dotDenominator;
-        return p1 + lineVec * t;
-    }
     
     private Vector2 GenerateVoronoiCenter(int x, int y){
         Vector2 chunkCenter = new Vector2(x * _width, y * _width) + new Vector2(_width / 2f, _width / 2f);
@@ -124,21 +102,25 @@ public class Chunk{
     }
     
     public void Draw(){
-        Vector3 pos = new Vector3(_pos.x, 0, _pos.y);
-        Vector3 up = Vector3.forward * _width;
-        Vector3 right = Vector3.right * _width;
-        Debug.DrawLine(pos, pos + right,Color.cyan);
-        Debug.DrawLine(pos, pos + up,Color.cyan);
-        Debug.DrawLine(pos + up, pos + right + up, Color.cyan);
-        Debug.DrawLine(pos + right, pos + up + right ,Color.cyan);
-        
-        Vector3 center = new Vector3(_center.x, 0, _center.y);
-        Debug.DrawLine(center, center + Vector3.up * _width/2, Color.white);
+        // Vector3 pos = new Vector3(_pos.x, 0, _pos.y);
+        // Vector3 up = Vector3.forward * _width;
+        // Vector3 right = Vector3.right * _width;
+        // Debug.DrawLine(pos, pos + right,Color.cyan);
+        // Debug.DrawLine(pos, pos + up,Color.cyan);
+        // Debug.DrawLine(pos + up, pos + right + up, Color.cyan);
+        // Debug.DrawLine(pos + right, pos + up + right ,Color.cyan);
+        //
+        // Vector3 center = new Vector3(_center.x, 0, _center.y);
+        // Debug.DrawLine(center, center + Vector3.up * _width/2, Color.white);
         
         Vector3 voronoiCenter = new Vector3(_voronoiCenter.x, 0, _voronoiCenter.y);
         Debug.DrawLine(voronoiCenter, voronoiCenter + Vector3.up * _width/2, Color.red);
 
-
+        for (int i = 0; i < _voronoiPoints.Count - 1; i++) {
+            Vector3 from = new Vector3(_voronoiPoints[i].x, 0, _voronoiPoints[i].y);
+            Vector3 to = new Vector3(_voronoiPoints[i+1].x, 0, _voronoiPoints[i+1].y);
+            Debug.DrawLine(from, to, Color.red);
+        }
 
     }
 }
@@ -158,7 +140,7 @@ public class VoronoiGen : MonoBehaviour{
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start(){
-        int temp = 10;
+        int temp = 50;
         for (int y = 0; y < temp; y++) {
             for (int x = 0; x < temp; x++) {
                 CreateChunk(x, y);
