@@ -1,11 +1,15 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
-using TriangleNet;
-using TriangleNet.Geometry;
-using TriangleNet.Meshing.Algorithm;
+using DelaunatorSharp;
+using DelaunatorSharp.Unity.Extensions;
+using Unity.Mathematics;
+using UnityEngine.Timeline;
+using Random = UnityEngine.Random;
+
 
 public class Chunk{
     private Vector2 _pos; //bottom left corner
@@ -17,6 +21,7 @@ public class Chunk{
 
     private Vector2 _voronoiCenter;
     private List<Vector2> _voronoiPoints;
+    private List<Block> _blocks = new List<Block>();
     
     public Chunk(int x, int y, float w, float gap){
         _width = w;
@@ -63,17 +68,17 @@ public class Chunk{
 
             //clip
             foreach (var end in subjectPolygon) {
-                bool startIsInside = PolygonUtility.IsInside(start, midPoint, normal);
-                bool endIsInside = PolygonUtility.IsInside(end, midPoint, normal);
+                bool startIsInside = PolyUtil.IsInside(start, midPoint, normal);
+                bool endIsInside = PolyUtil.IsInside(end, midPoint, normal);
 
                 if (endIsInside) {
                     if (!startIsInside) {
-                        clippedPolygon.Add(PolygonUtility.GetIntersection(start, end, midPoint, normal));
+                        clippedPolygon.Add(PolyUtil.GetIntersection(start, end, midPoint, normal));
                     }
                     clippedPolygon.Add(end);
                 }
                 else if (startIsInside) {
-                    clippedPolygon.Add( PolygonUtility.GetIntersection(start, end, midPoint, normal));
+                    clippedPolygon.Add( PolyUtil.GetIntersection(start, end, midPoint, normal));
                 }
                 start = end;
             }
@@ -104,7 +109,84 @@ public class Chunk{
         return newPoint;
     }
 
-    public void GenerateBlocks(){
+    private List<IPoint> GeneratePoints(){
+        List<IPoint> pts = new List<IPoint>();
+        for (int i = 0; i < 200; i++) {
+            float x = (Random.value * 2 - 1) * _width / 2 + _voronoiCenter.x;
+            float y = (Random.value * 2 - 1) * _width / 2 + _voronoiCenter.y;
+
+            if (PolyUtil.IsPointInPolygon(new Vector2(x, y), _voronoiPoints, _voronoiCenter)) {
+                pts.Add(new Point(x, y));
+
+            }
+
+        }
+        return pts;
+    }
+    
+    public void GenerateBlocks(Material blockMaterial, Material roadMaterial){
+
+        List<IPoint> originalPoints = GeneratePoints();
+        
+        // List<IPoint> points = _voronoiPoints.Select(point => new Vector2(point.x, point.y)).ToPoints().ToList();
+        
+        var delaunator = new Delaunator(originalPoints.ToArray());
+        
+        var points = delaunator.Points;
+        var neighboursDict = new Dictionary<int, HashSet<int>>();
+        for (int i = 0; i < delaunator.Points.Length; i++) {
+            neighboursDict[i] = new HashSet<int>();
+        }
+
+        for (int e = 0; e < delaunator.Triangles.Length; e++) {
+            int p = delaunator.Triangles[e];
+            int q = delaunator.Triangles[Delaunator.NextHalfedge(e)];
+
+            neighboursDict[p].Add(q);
+            neighboursDict[q].Add(p);
+        }
+        
+                
+        foreach (var point in neighboursDict) {
+            IPoint center = points[point.Key];
+            Face face = new Face();
+
+            List<Vector2> neighbours = new List<Vector2>();
+            foreach (var neighbour in point.Value) {
+                Vector2 p = new Vector2((float)points[neighbour].X, (float)points[neighbour].Y);
+                neighbours.Add(p);
+            }
+            
+            List<Vector2> bounds = _voronoiPoints;
+            
+            List<Vector2> pts = CalculateVoronoiCell(new Vector2((float)center.X, (float)center.Y), neighbours, bounds);
+
+            for (int i = 0; i < pts.Count; i++) {
+                RoadNode node = new RoadNode(pts[^(i+1)].x, pts[^(i+1)].y);
+                face.nodes.Add(node);
+            }
+            
+
+            Block block = new Block(face);
+            block.GenerateInset();
+            block.GenerateBlock(blockMaterial);
+            block.GenerateRoad(roadMaterial);
+
+        }
+        
+
+        
+
+
+
+
+            // Debug.Log($"{halfedges[0]}, {halfedges[1]}");
+        // int p1 = triangles[halfedges[0]];
+        // int p2 = halfedges[halfedges[0]];
+        // Debug.DrawLine(points[p1].ToVector3(), points[p2].ToVector3(), Color.blue, 99f);
+        //
+
+
 
     }
     
@@ -116,7 +198,7 @@ public class Chunk{
         // Debug.DrawLine(pos, pos + up,Color.cyan);
         // Debug.DrawLine(pos + up, pos + right + up, Color.cyan);
         // Debug.DrawLine(pos + right, pos + up + right ,Color.cyan);
-        //
+        
         // Vector3 center = new Vector3(_center.x, 0, _center.y);
         // Debug.DrawLine(center, center + Vector3.up * _width/2, Color.white);
         
@@ -137,19 +219,22 @@ public class VoronoiGen : MonoBehaviour{
     [SerializeField] private float chunkWidth;
     [SerializeField] private float edgeGap;
 
+    [SerializeField] public Material blockMaterial;
+    [SerializeField] public Material roadMaterial;
+    
     private List<Chunk> chunks = new List<Chunk>();
 
     void CreateChunk(int x, int y){
         Chunk newChunk = new Chunk(x, y, chunkWidth, edgeGap);
         newChunk.GenerateVoronoi();
-        newChunk.GenerateBlocks();
+        newChunk.GenerateBlocks(blockMaterial, roadMaterial);
         
         chunks.Add(newChunk);
     }
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start(){
-        int temp = 50;
+        int temp = 16;
         for (int y = 0; y < temp; y++) {
             for (int x = 0; x < temp; x++) {
                 CreateChunk(x, y);
@@ -160,8 +245,6 @@ public class VoronoiGen : MonoBehaviour{
     // Update is called once per frame
     void Update()
     {
-        foreach (var chu in chunks) {
-            chu.Draw();
-        }
+
     }
 }

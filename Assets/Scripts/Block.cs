@@ -5,8 +5,7 @@ using System.Linq;
 
 public class Block{
     public Face originalFace;
-
-    public Mesh structureMesh = new Mesh();
+    
     public List<Vector3> insetPoints = new List<Vector3>();
 
     public Block(Face face){
@@ -19,7 +18,7 @@ public class Block{
             polygon.Add(new Vector2(node.pos.x, node.pos.z));
         }
 
-        List<Vector2> newPolygon = PolygonUtility.InsetPolygon(polygon, 4f);
+        List<Vector2> newPolygon = PolyUtil.InsetPolygon(polygon, 1f);
 
         foreach (var point in newPolygon) {
             insetPoints.Add(new Vector3(point.x, 0, point.y));
@@ -33,9 +32,9 @@ public class Block{
         meshObject.AddComponent<MeshRenderer>();
         MeshFilter meshFilter = meshObject.GetComponent<MeshFilter>();
 
-        float height = (Random.value + 1f) * 3f; 
+        float height = (Random.value) * 15f; 
         
-        meshFilter.mesh = PolygonUtility.GeneratePrismMesh(insetPoints, height);
+        meshFilter.mesh = PolyUtil.GeneratePrismMesh(insetPoints, height);
         meshObject.GetComponent<MeshRenderer>().material = blockMaterial;
         
         return meshObject;
@@ -52,7 +51,7 @@ public class Block{
             originalPoints.Add(node.pos);
         }
 
-        meshFilter.mesh = PolygonUtility.GenerateRoad(originalPoints, insetPoints);
+        meshFilter.mesh = PolyUtil.GenerateRoad(originalPoints, insetPoints);
         meshObject.GetComponent<MeshRenderer>().material = roadMaterial;
 
         return meshObject;

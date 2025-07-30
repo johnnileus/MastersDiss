@@ -432,7 +432,7 @@ MonoBehaviour:
   chunkSize: 100
   drawChunks: 0
   renderDistance: 1
-  roadPartitions: {x: 0, y: 0}
+  roadPartitions: {x: 5, y: 5}
   nodeJitter: 0.05
 --- !u!4 &591882720
 Transform:
@@ -1223,7 +1223,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   chunkWidth: 128
-  edgeGap: 15
+  edgeGap: 32
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

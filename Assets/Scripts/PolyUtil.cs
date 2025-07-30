@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public static class PolygonUtility{
+public static class PolyUtil{
 
 
     public static Mesh GeneratePrismMesh(List<Vector3> points, float height)
@@ -162,6 +162,37 @@ public static class PolygonUtility{
         return Vector2.Dot(p - linePoint, normal) >= 0;
     }
 
+
+    public static bool IsPointInPolygon(Vector2 point, List<Vector2> polygonPoints, Vector2 centerPoint)
+    {
+        if (polygonPoints == null || polygonPoints.Count < 3)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < polygonPoints.Count; i++)
+        {
+            Vector2 p1 = polygonPoints[i];
+            Vector2 p2 = polygonPoints[(i + 1) % polygonPoints.Count];
+
+            Vector2 edge = p2 - p1;
+
+            Vector2 normal = new Vector2(-edge.y, edge.x);
+
+            Vector2 vectorToCenter = centerPoint - p1;
+
+            if (Vector2.Dot(vectorToCenter, normal) < 0) {
+                normal = -normal;
+            }
+
+            if (!IsInside(point, p1, normal)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    
     public static Vector2 GetIntersection(Vector2 p1, Vector2 p2, Vector2 linePoint, Vector2 normal){
         Vector2 lineVec = p2 - p1;
         float dotNumerator = Vector2.Dot(linePoint - p1, normal);
@@ -173,6 +204,10 @@ public static class PolygonUtility{
 
         float t = dotNumerator / dotDenominator;
         return p1 + lineVec * t;
+    }
+
+    public static Vector3 ToVec3(Vector2 inp){
+        return new Vector3(inp.x, 0,inp.y);
     }
     
 }
