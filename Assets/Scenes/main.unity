@@ -1226,6 +1226,9 @@ MonoBehaviour:
   edgeGap: 32
   blockMaterial: {fileID: 2100000, guid: 479cc70cd69a0fc48a1f91ec5dfa5fbf, type: 2}
   roadMaterial: {fileID: 2100000, guid: 822b07297c595e34f9243cd8938eb6be, type: 2}
+  player: {fileID: 100347188}
+  renderDistance: 2
+  DrawVoronoiLines: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

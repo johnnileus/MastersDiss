@@ -1,17 +1,27 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public static class PolyUtil{
 
+    public static Mesh GeneratePrismMesh(List<Vector2> points, float height){
+        List<Vector3> vec3Points = new List<Vector3>();
+        foreach (var point in points) {
+            vec3Points.Add(PolyUtil.ToVec3(point));
+        }
 
-    public static Mesh GeneratePrismMesh(List<Vector3> points, float height)
-    {
+        return GeneratePrismMesh(vec3Points, height);
+    }
+
+    public static Mesh GeneratePrismMesh(List<Vector3> points, float height){
         Mesh mesh = new Mesh();
+        height = 0f;
         int pointCount = points.Count;
 
-
-
+        float temp = Mathf.PerlinNoise(points[0].x / 300.01f, points[0].z / 300.01f);
+        Vector3 offset = new Vector3(0, Mathf.Pow(temp * 2, 4) * 100f + Random.value * 5f, 0);
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
 
@@ -19,8 +29,8 @@ public static class PolyUtil{
         {
             Vector3 p0 = points[i];
             Vector3 p1 = points[(i + 1) % pointCount];
-            Vector3 p2 = p1 + Vector3.up * height;
-            Vector3 p3 = p0 + Vector3.up * height;
+            Vector3 p2 = p1 + Vector3.up * height + offset;
+            Vector3 p3 = p0 + Vector3.up * height + offset;
 
             int baseIndex = vertices.Count;
             vertices.AddRange(new[] { p0, p1, p2, p3 });
@@ -37,7 +47,8 @@ public static class PolyUtil{
         int topStartIndex = vertices.Count;
         for (int i = 0; i < pointCount; i++)
         {
-            vertices.Add(points[i] + Vector3.up * height);
+            
+            vertices.Add(points[i] + Vector3.up * height + offset);
         }
         for (int i = 1; i < pointCount - 1; i++)
         {
@@ -53,7 +64,60 @@ public static class PolyUtil{
 
         return mesh;
     }
+    
+    public static Vector2 GetCenterAverage(List<Vector2> points){
+        if (points == null || points.Count == 0) {
+            return Vector2.zero;
+        }
 
+        Vector2 sum = Vector2.zero;
+        foreach (var p in points) {
+            sum += p;
+        }
+        return sum / points.Count;
+    }
+    
+    public static List<Vector2> CutPolygon(List<Vector2> polygon, Vector2 point, Vector2 normal){
+
+        Vector2 start = polygon[^1];
+
+        List<Vector2> clippedPolygon = new List<Vector2>();
+
+        foreach (var end in polygon) {
+            bool startIsInside = PolyUtil.IsInside(start, point, normal);
+            bool endIsInside = PolyUtil.IsInside(end, point, normal);
+
+            if (endIsInside) {
+                if (!startIsInside) {
+                    clippedPolygon.Add(PolyUtil.GetIntersection(start, end, point, normal));
+                }
+                clippedPolygon.Add(end);
+            }
+            else if (startIsInside) {
+                clippedPolygon.Add( PolyUtil.GetIntersection(start, end, point, normal));
+            }
+            start = end;
+        }
+
+        return clippedPolygon;
+    }
+    
+    //generates boundary for a point, given a list of other points
+    public static List<Vector2> CalculateVoronoiCell(Vector2 centerPoint, List<Vector2> neighborPoints, List<Vector2> bounds){
+        List<Vector2> subjectPolygon = new List<Vector2>(bounds);
+
+        foreach (var neighbor in neighborPoints) {
+            Vector2 midPoint = (centerPoint + neighbor) / 2f;
+            Vector2 normal = (centerPoint - neighbor).normalized;
+
+            if (subjectPolygon.Count == 0) continue;
+            
+            subjectPolygon = CutPolygon(subjectPolygon, midPoint, normal);
+
+        }
+        return subjectPolygon;
+    }
+    
     public static Mesh GenerateRoad(List<Vector3> original, List<Vector3> inset){
         Mesh mesh = new Mesh();
         int pointCount = original.Count;
@@ -192,8 +256,9 @@ public static class PolyUtil{
 
         return true;
     }
-    
-    public static Vector2 GetIntersection(Vector2 p1, Vector2 p2, Vector2 linePoint, Vector2 normal){
+
+    private static Vector2 GetIntersection(Vector2 p1, Vector2 p2, Vector2 linePoint, Vector2 normal){
+        
         Vector2 lineVec = p2 - p1;
         float dotNumerator = Vector2.Dot(linePoint - p1, normal);
         float dotDenominator = Vector2.Dot(lineVec, normal);

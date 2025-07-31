@@ -55,42 +55,10 @@ public class Chunk{
             new (_voronoiCenter.x - boundSize, _voronoiCenter.y + boundSize)
         };
 
-        _voronoiPoints = CalculateVoronoiCell(_voronoiCenter, neighbours, bounds);
+        _voronoiPoints = PolyUtil.CalculateVoronoiCell(_voronoiCenter, neighbours, bounds);
     }
 
-    private List<Vector2> CalculateVoronoiCell(Vector2 centerPoint, List<Vector2> neighborPoints, List<Vector2> bounds){
-        List<Vector2> subjectPolygon = new List<Vector2>(bounds);
-
-        foreach (var neighbor in neighborPoints) {
-            Vector2 midPoint = (centerPoint + neighbor) / 2f;
-            Vector2 normal = (centerPoint - neighbor).normalized;
-
-            List<Vector2> clippedPolygon = new List<Vector2>();
-            if (subjectPolygon.Count == 0) continue;
-
-            Vector2 start = subjectPolygon[^1];
-
-            //clip
-            foreach (var end in subjectPolygon) {
-                bool startIsInside = PolyUtil.IsInside(start, midPoint, normal);
-                bool endIsInside = PolyUtil.IsInside(end, midPoint, normal);
-
-                if (endIsInside) {
-                    if (!startIsInside) {
-                        clippedPolygon.Add(PolyUtil.GetIntersection(start, end, midPoint, normal));
-                    }
-                    clippedPolygon.Add(end);
-                }
-                else if (startIsInside) {
-                    clippedPolygon.Add( PolyUtil.GetIntersection(start, end, midPoint, normal));
-                }
-                start = end;
-            }
-
-            subjectPolygon = clippedPolygon;
-        }
-        return subjectPolygon;
-    }
+   
     
     private Vector2 GenerateVoronoiCenter(int x, int y){
         Vector2 chunkCenter = new Vector2(x * _width, y * _width) + new Vector2(_width / 2f, _width / 2f);
@@ -190,7 +158,7 @@ public class Chunk{
             
             List<Vector2> bounds = _voronoiPoints;
             
-            List<Vector2> pts = CalculateVoronoiCell(new Vector2((float)center.X, (float)center.Y), neighbours, bounds);
+            List<Vector2> pts = PolyUtil.CalculateVoronoiCell(new Vector2((float)center.X, (float)center.Y), neighbours, bounds);
 
             for (int i = 0; i < pts.Count; i++) {
                 RoadNode node = new RoadNode(pts[^(i+1)].x, pts[^(i+1)].y);
