@@ -7,6 +7,7 @@ using Vector3 = UnityEngine.Vector3;
 using DelaunatorSharp;
 using DelaunatorSharp.Unity.Extensions;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEngine.Timeline;
 using Random = UnityEngine.Random;
 
@@ -15,22 +16,25 @@ public class Chunk{
     private Vector2 _pos; //bottom left corner
     private Vector2Int _coords;
     private float _width;
-    private Vector2 _center;
+    public Vector2 Center;
     private float _gap;
 
 
     private Vector2 _voronoiCenter;
     private List<Vector2> _voronoiPoints;
-    private List<Block> _blocks = new List<Block>();
+    public List<Block> Blocks = new List<Block>();
     
     public Chunk(int x, int y, float w, float gap){
         _width = w;
         _pos = new Vector2(x * w, y * w);
-        _center = _pos + new Vector2(w / 2f, w / 2f);
+        Center = _pos + new Vector2(w / 2f, w / 2f);
         _coords = new Vector2Int(x, y);
         _gap = gap;
     }
-
+    
+    private int GetChunkSeed(){
+        return (int)(_coords.x * 1619.5125f + _coords.y * 31337.65125f);
+    }
     public void GenerateVoronoi(){
         _voronoiCenter = GenerateVoronoiCenter(_coords.x, _coords.y);
 
@@ -87,8 +91,6 @@ public class Chunk{
         }
         return subjectPolygon;
     }
-
-
     
     private Vector2 GenerateVoronoiCenter(int x, int y){
         Vector2 chunkCenter = new Vector2(x * _width, y * _width) + new Vector2(_width / 2f, _width / 2f);
@@ -109,24 +111,53 @@ public class Chunk{
         return newPoint;
     }
 
-    private List<IPoint> GeneratePoints(){
+
+    private List<IPoint> GeneratePoints(int numPoints, float minDistance, int seed)
+    {
         List<IPoint> pts = new List<IPoint>();
-        for (int i = 0; i < 200; i++) {
-            float x = (Random.value * 2 - 1) * _width / 2 + _voronoiCenter.x;
-            float y = (Random.value * 2 - 1) * _width / 2 + _voronoiCenter.y;
+        System.Random rand = new System.Random(seed);
+    
+        int maxAttempts = numPoints * 50;
+        int currentAttempts = 0;
 
-            if (PolyUtil.IsPointInPolygon(new Vector2(x, y), _voronoiPoints, _voronoiCenter)) {
-                pts.Add(new Point(x, y));
+        while (pts.Count < numPoints && currentAttempts < maxAttempts) {
+            currentAttempts++;
 
+            float x = ((float)rand.NextDouble() * 2 - 1) * _width + _voronoiCenter.x;
+            float y = ((float)rand.NextDouble() * 2 - 1) * _width + _voronoiCenter.y;
+            Point candidatePoint = new Point(x, y);
+        
+            if (!PolyUtil.IsPointInPolygon(new Vector2(x, y), _voronoiPoints, _voronoiCenter)) {
+                continue; 
             }
+        
+            bool isTooClose = false;
+            float minDistanceSq = minDistance * minDistance; 
 
+            foreach (IPoint existingPoint in pts) {
+                float dx = (float)(candidatePoint.X - existingPoint.X);
+                float dy = (float)(candidatePoint.Y - existingPoint.Y);
+                float distanceSq = dx * dx + dy * dy; 
+
+                if (distanceSq < minDistanceSq)
+                {
+                    isTooClose = true;
+                    break;
+                }
+            }
+            if (!isTooClose) {
+                pts.Add(candidatePoint);
+            }
         }
+
         return pts;
     }
-    
-    public void GenerateBlocks(Material blockMaterial, Material roadMaterial){
 
-        List<IPoint> originalPoints = GeneratePoints();
+    
+    public List<GameObject> GenerateBlocks(Material blockMaterial, Material roadMaterial){
+
+        List<GameObject> GOs = new List<GameObject>();
+            List<IPoint> originalPoints = GeneratePoints(50, _width/5f, GetChunkSeed());
         
         // List<IPoint> points = _voronoiPoints.Select(point => new Vector2(point.x, point.y)).ToPoints().ToList();
         
@@ -169,24 +200,13 @@ public class Chunk{
 
             Block block = new Block(face);
             block.GenerateInset();
-            block.GenerateBlock(blockMaterial);
-            block.GenerateRoad(roadMaterial);
-
+            GOs.Add(block.GenerateBlock(blockMaterial));
+            GOs.Add(block.GenerateRoad(roadMaterial));
+            Blocks.Add(block);
+            
         }
-        
 
-        
-
-
-
-
-            // Debug.Log($"{halfedges[0]}, {halfedges[1]}");
-        // int p1 = triangles[halfedges[0]];
-        // int p2 = halfedges[halfedges[0]];
-        // Debug.DrawLine(points[p1].ToVector3(), points[p2].ToVector3(), Color.blue, 99f);
-        //
-
-
+        return GOs;
 
     }
     
@@ -210,7 +230,6 @@ public class Chunk{
             Vector3 to = new Vector3(_voronoiPoints[i+1].x, 0, _voronoiPoints[i+1].y);
             Debug.DrawLine(from, to, Color.red);
         }
-
     }
 }
 
@@ -221,30 +240,95 @@ public class VoronoiGen : MonoBehaviour{
 
     [SerializeField] public Material blockMaterial;
     [SerializeField] public Material roadMaterial;
-    
-    private List<Chunk> chunks = new List<Chunk>();
 
-    void CreateChunk(int x, int y){
+    [SerializeField] private GameObject player;
+    [SerializeField] public int renderDistance;
+
+    [SerializeField] public bool DrawVoronoiLines;
+    
+    public Dictionary<(int x, int y), Chunk> chunks = new Dictionary<(int x, int y), Chunk>();
+
+
+    bool CreateChunk(int x, int y){
+        if (chunks.ContainsKey((x, y))) {
+            return false;
+        }
+        
         Chunk newChunk = new Chunk(x, y, chunkWidth, edgeGap);
         newChunk.GenerateVoronoi();
-        newChunk.GenerateBlocks(blockMaterial, roadMaterial);
+        List<GameObject> GOs = newChunk.GenerateBlocks(blockMaterial, roadMaterial);
+        foreach (var GO in GOs) {
+            GO.transform.SetParent(this.transform);
+        }
         
-        chunks.Add(newChunk);
+        chunks.Add((x, y), newChunk);
+        return true;
     }
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start(){
-        int temp = 16;
-        for (int y = 0; y < temp; y++) {
-            for (int x = 0; x < temp; x++) {
-                CreateChunk(x, y);
-            }
-        }
+        // int temp = 16;
+        // for (int y = 0; y < temp; y++) {
+        //     for (int x = 0; x < temp; x++) {
+        //         CreateChunk(x, y);
+        //     }
+        // }
     }
 
     // Update is called once per frame
     void Update()
     {
+        Vector3 plrPos = player.transform.position;
+        Vector2Int plrChunk = new Vector2Int(Mathf.FloorToInt(plrPos.x / chunkWidth), Mathf.FloorToInt(plrPos.z / chunkWidth));
+        
+        int chunksCreated = 0;
+        int chunksDeleted = 0;
+        
+        for (int y = -renderDistance; y < renderDistance; y++) {
+            for (int x = -renderDistance; x < renderDistance; x++) {
+                
+                Vector2Int currentChunkCoords = new Vector2Int(plrChunk.x + x, plrChunk.y + y);
 
+                float distToPlr = Vector3.Distance(
+                    new Vector3((currentChunkCoords.x + 0.5f) * chunkWidth,0, (currentChunkCoords.y + 0.5f) * chunkWidth),
+                    plrPos
+                );
+                
+                
+                if (distToPlr < renderDistance * chunkWidth) {
+
+                    if (CreateChunk(currentChunkCoords.x, currentChunkCoords.y)) {
+                        chunksCreated++;
+                    }
+                }
+            }
+            
+        }
+        //delete distant chunks
+        List<(int, int)> chunksToDelete = new List<(int, int)>();
+        foreach (var chunk in chunks) {
+            float distToPlr = Vector3.Distance(PolyUtil.ToVec3(chunk.Value.Center), plrPos);
+            if (distToPlr > renderDistance * chunkWidth) {
+                chunksToDelete.Add(chunk.Key);
+            }
+        }
+        foreach (var key in chunksToDelete) {
+            foreach (var block in chunks[key].Blocks) {
+                Destroy(block.GetBuildingObject());
+                Destroy(block.GetRoadObject());
+            }
+            chunks[key] = null;
+            chunks.Remove(key);
+            chunksDeleted++;
+        }
+        
+        if (DrawVoronoiLines) {
+            foreach (var chunk in chunks) {
+                chunk.Value.Draw();
+            }
+        }
+        
+            
+        
     }
 }

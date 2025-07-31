@@ -94,8 +94,8 @@ public class SquareChunk {
 
     }
 
-    private float GetChunkSeed(float x, float y){
-        return x * 1619.5125f + y * 31337.65125f;
+    private int GetChunkSeed(){
+        return (int)(chunkID.x * 1619.5125f + chunkID.y * 31337.65125f);
     }
     
     private float WrapAngleRadian(float ang){

@@ -1224,12 +1224,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   chunkWidth: 128
   edgeGap: 32
+  blockMaterial: {fileID: 2100000, guid: 479cc70cd69a0fc48a1f91ec5dfa5fbf, type: 2}
+  roadMaterial: {fileID: 2100000, guid: 822b07297c595e34f9243cd8938eb6be, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1591360336}
-  - {fileID: 406969815}
   - {fileID: 100347192}
   - {fileID: 1205673621}
   - {fileID: 949074704}
+  - {fileID: 406969815}

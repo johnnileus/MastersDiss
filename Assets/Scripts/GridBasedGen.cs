@@ -71,7 +71,7 @@ public class GridBasedGen : MonoBehaviour{
 
         int chunksCreated = 0;
         int chunksDeleted = 0;
-        //generate chunks
+
         for (int y = -renderDistance; y < renderDistance; y++) {
             for (int x = -renderDistance; x < renderDistance; x++) {
                 

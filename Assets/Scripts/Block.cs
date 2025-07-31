@@ -2,11 +2,15 @@ using UnityEngine;
 
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 
 public class Block{
     public Face originalFace;
     
     public List<Vector3> insetPoints = new List<Vector3>();
+
+    public GameObject BuildingObject;
+    public GameObject RoadObject;
 
     public Block(Face face){
         originalFace = face;
@@ -18,12 +22,11 @@ public class Block{
             polygon.Add(new Vector2(node.pos.x, node.pos.z));
         }
 
-        List<Vector2> newPolygon = PolyUtil.InsetPolygon(polygon, 1f);
+        List<Vector2> newPolygon = PolyUtil.InsetPolygon(polygon, 3f);
 
         foreach (var point in newPolygon) {
             insetPoints.Add(new Vector3(point.x, 0, point.y));
         }
-
     }
     
     public GameObject GenerateBlock(Material blockMaterial){
@@ -36,8 +39,8 @@ public class Block{
         
         meshFilter.mesh = PolyUtil.GeneratePrismMesh(insetPoints, height);
         meshObject.GetComponent<MeshRenderer>().material = blockMaterial;
-        
-        return meshObject;
+        BuildingObject = meshObject;
+        return BuildingObject;
     }
 
     public GameObject GenerateRoad(Material roadMaterial){
@@ -53,11 +56,18 @@ public class Block{
 
         meshFilter.mesh = PolyUtil.GenerateRoad(originalPoints, insetPoints);
         meshObject.GetComponent<MeshRenderer>().material = roadMaterial;
+        RoadObject = meshObject;
+        return RoadObject;
+    }
 
-        return meshObject;
+    public GameObject GetBuildingObject(){
+        return BuildingObject;
+    }
+
+    public GameObject GetRoadObject(){
+        return RoadObject;
     }
     
-
     public void DrawInset(){
         for (int i = 0; i < insetPoints.Count - 1; i++) {
             Debug.DrawLine(insetPoints[i], insetPoints[i+1], Color.green, 99f);
