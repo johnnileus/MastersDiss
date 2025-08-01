@@ -270,11 +270,11 @@ public class SquareChunk {
 
     }
 
-    public List<GameObject> GenerateStructures(Material blockMaterial, Material roadMaterial){
+    public List<GameObject> GenerateStructures(){
         List<GameObject> meshObjects = new List<GameObject>();
         foreach (var block in blocks) {
-            meshObjects.Add(block.GenerateBlock(blockMaterial));
-            meshObjects.Add(block.GenerateRoad(roadMaterial));
+            meshObjects.Add(block.GenerateBlock());
+            meshObjects.Add(block.GenerateRoad());
         }
 
         return meshObjects;

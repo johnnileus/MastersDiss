@@ -39,7 +39,7 @@ public class GridBasedGen : MonoBehaviour{
         newChunk.GenerateBlocks();
         // newChunk.DrawAllBlocks();
         
-        List<GameObject> meshObjects = newChunk.GenerateStructures(blockMaterial, roadMaterial);
+        List<GameObject> meshObjects = newChunk.GenerateStructures();
         GameObject parent = new GameObject($"{x}, {y}");
         parent.transform.SetParent(this.transform);
         foreach (var meshObject in meshObjects) {

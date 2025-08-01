@@ -168,8 +168,8 @@ public class Chunk{
 
             Block block = new Block(face);
             block.GenerateInset();
-            GOs.Add(block.GenerateBlock(blockMaterial));
-            GOs.Add(block.GenerateRoad(roadMaterial));
+            GOs.Add(block.GenerateBlock());
+            GOs.Add(block.GenerateRoad());
             Blocks.Add(block);
             
         }
@@ -235,12 +235,8 @@ public class VoronoiGen : MonoBehaviour{
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start(){
-        // int temp = 16;
-        // for (int y = 0; y < temp; y++) {
-        //     for (int x = 0; x < temp; x++) {
-        //         CreateChunk(x, y);
-        //     }
-        // }
+
+        
     }
 
     // Update is called once per frame
@@ -280,6 +276,7 @@ public class VoronoiGen : MonoBehaviour{
                 chunksToDelete.Add(chunk.Key);
             }
         }
+        
         foreach (var key in chunksToDelete) {
             foreach (var block in chunks[key].Blocks) {
                 Destroy(block.GetBuildingObject());

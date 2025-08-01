@@ -24,7 +24,7 @@ public class Block{
             polygon.Add(new Vector2(node.pos.x, node.pos.z));
         }
 
-        List<Vector2> newPolygon = PolyUtil.InsetPolygon(polygon, 3f);
+        List<Vector2> newPolygon = PolyUtil.InsetPolygon(polygon, Global.inst.roadWidth);
 
         foreach (var point in newPolygon) {
             insetPoints.Add(new Vector3(point.x, 0, point.y));
@@ -67,12 +67,12 @@ public class Block{
         return longestAxis.normalized;
     }
     
-    private void SplitBlock(GameObject buildingObject, Material blockMaterial){
+    private void SplitBlock(GameObject buildingObject){
         List<List<Vector2>> polygons = new List<List<Vector2>>();
         polygons.Add(insetPointsVec2);
         
         
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < Global.inst.blockSplitAmount; i++) {
             List<List<Vector2>> newPolygons = new List<List<Vector2>>();
             foreach (var polygon in polygons) {
                 Vector2 normal = GenerateNormal(polygon);
@@ -88,8 +88,10 @@ public class Block{
             obj.AddComponent<MeshFilter>();
             obj.AddComponent<MeshRenderer>();
             MeshFilter meshFilter = obj.GetComponent<MeshFilter>();
-            meshFilter.mesh = PolyUtil.GeneratePrismMesh(polygon, Random.value * 15f);
-            obj.GetComponent<MeshRenderer>().material = blockMaterial;
+            float noiseVal = Mathf.PerlinNoise(polygon[0].x / Global.inst.noiseScale, polygon[0].y / Global.inst.noiseScale);
+            float height = Mathf.Pow(noiseVal * Global.inst.powScale, Global.inst.heightPow) * Global.inst.noiseAmp + Random.value * Global.inst.blockHeightRange;
+            meshFilter.mesh = PolyUtil.GeneratePrismMesh(polygon, height);
+            obj.GetComponent<MeshRenderer>().material = Global.inst.blockMaterial;
             
             obj.transform.parent = buildingObject.transform;
         
@@ -97,16 +99,16 @@ public class Block{
         
     }
     
-    public GameObject GenerateBlock(Material blockMaterial){
+    public GameObject GenerateBlock(){
         GameObject meshObject = new GameObject();
         
-        SplitBlock(meshObject, blockMaterial);
+        SplitBlock(meshObject);
         
         BuildingObject = meshObject;
         return BuildingObject;
     }
 
-    public GameObject GenerateRoad(Material roadMaterial){
+    public GameObject GenerateRoad(){
         GameObject meshObject = new GameObject();
         meshObject.AddComponent<MeshFilter>();
         meshObject.AddComponent<MeshRenderer>();
@@ -118,7 +120,7 @@ public class Block{
         }
 
         meshFilter.mesh = PolyUtil.GenerateRoad(originalPoints, insetPoints);
-        meshObject.GetComponent<MeshRenderer>().material = roadMaterial;
+        meshObject.GetComponent<MeshRenderer>().material = Global.inst.roadMaterial;
         RoadObject = meshObject;
         return RoadObject;
     }

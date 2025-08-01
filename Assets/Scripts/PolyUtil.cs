@@ -9,7 +9,7 @@ public static class PolyUtil{
     public static Mesh GeneratePrismMesh(List<Vector2> points, float height){
         List<Vector3> vec3Points = new List<Vector3>();
         foreach (var point in points) {
-            vec3Points.Add(PolyUtil.ToVec3(point));
+            vec3Points.Add(ToVec3(point));
         }
 
         return GeneratePrismMesh(vec3Points, height);
@@ -17,11 +17,9 @@ public static class PolyUtil{
 
     public static Mesh GeneratePrismMesh(List<Vector3> points, float height){
         Mesh mesh = new Mesh();
-        height = 0f;
         int pointCount = points.Count;
 
-        float temp = Mathf.PerlinNoise(points[0].x / 300.01f, points[0].z / 300.01f);
-        Vector3 offset = new Vector3(0, Mathf.Pow(temp * 2, 4) * 100f + Random.value * 5f, 0);
+
         List<Vector3> vertices = new List<Vector3>();
         List<int> triangles = new List<int>();
 
@@ -29,8 +27,8 @@ public static class PolyUtil{
         {
             Vector3 p0 = points[i];
             Vector3 p1 = points[(i + 1) % pointCount];
-            Vector3 p2 = p1 + Vector3.up * height + offset;
-            Vector3 p3 = p0 + Vector3.up * height + offset;
+            Vector3 p2 = p1 + Vector3.up * height;
+            Vector3 p3 = p0 + Vector3.up * height;
 
             int baseIndex = vertices.Count;
             vertices.AddRange(new[] { p0, p1, p2, p3 });
@@ -48,7 +46,7 @@ public static class PolyUtil{
         for (int i = 0; i < pointCount; i++)
         {
             
-            vertices.Add(points[i] + Vector3.up * height + offset);
+            vertices.Add(points[i] + Vector3.up * height);
         }
         for (int i = 1; i < pointCount - 1; i++)
         {
